@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>voltr² | Professional Electrical Toolbox</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#21222c">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) { registration.unregister(); }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(names => { for (let name of names) { caches.delete(name); } });
+        }
+    </script>
+    
+    <style>
+        /* --- KOPIERSCHUTZ --- */
+        body { 
+            background-color: #191a21; margin: 0; padding: 0; 
+            display: flex; justify-content: center; 
+            font-family: 'JetBrains Mono', monospace; 
+            -webkit-user-select: none; -ms-user-select: none; user-select: none;
+        }
+        input, select, textarea, .result-box, .history-text { -webkit-user-select: auto; -ms-user-select: auto; user-select: auto; }
+
+        .voltr-main-container { background-color: #21222c; color: #f8f8f2; padding: 25px; border-radius: 12px; max-width: 1450px; width: 95%; margin: 40px auto; border: 1px solid #44475a; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+        .voltr-header { color: #ff79c6; text-align: center; font-size: 42px; font-weight: bold; margin-bottom: 25px; }
+        
+        /* Dashboard Navigation */
+        .nav-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 35px; }
+        .nav-group { background: #1e1f29; border: 1px solid #44475a; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .nav-title { font-size: 13px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 2px solid; padding-bottom: 6px; text-align: center; }
+        
+        .voltr-tab-btn { background: #282a36; color: #f8f8f2; border: 1px solid #44475a; padding: 10px 12px; cursor: pointer; border-radius: 6px; font-family: inherit; transition: all 0.2s ease; font-size: 13px; text-align: center; width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: center; white-space: normal; line-height: 1.2; }
+        .voltr-tab-btn:hover { background: #44475a; transform: translateY(-2px); }
+        
+        /* FARBCODIERTE SPALTEN-BUTTONS */
+        .nav-group:nth-child(1) .voltr-tab-btn:hover { border-color: #8be9fd; }
+        .nav-group:nth-child(1) .voltr-tab-btn.active { background: #8be9fd; color: #21222c; font-weight: bold; border-color: #8be9fd; box-shadow: 0 4px 10px rgba(139,233,253,0.3); transform: translateY(0); }
+        .nav-group:nth-child(2) .voltr-tab-btn:hover { border-color: #ff5555; }
+        .nav-group:nth-child(2) .voltr-tab-btn.active { background: #ff5555; color: #21222c; font-weight: bold; border-color: #ff5555; box-shadow: 0 4px 10px rgba(255,85,85,0.3); transform: translateY(0); }
+        .nav-group:nth-child(3) .voltr-tab-btn:hover { border-color: #ffb86c; }
+        .nav-group:nth-child(3) .voltr-tab-btn.active { background: #ffb86c; color: #21222c; font-weight: bold; border-color: #ffb86c; box-shadow: 0 4px 10px rgba(255,184,108,0.3); transform: translateY(0); }
+        .nav-group:nth-child(4) .voltr-tab-btn:hover { border-color: #50fa7b; }
+        .nav-group:nth-child(4) .voltr-tab-btn.active { background: #50fa7b; color: #21222c; font-weight: bold; border-color: #50fa7b; box-shadow: 0 4px 10px rgba(80,250,123,0.3); transform: translateY(0); }
+
+        /* --- PERFEKTES, SYMMETRISCHES LAYOUT --- */
+        .content-wrapper { display: grid; grid-template-columns: 1fr 320px; gap: 25px; align-items: stretch; }
+        .tabs-container { min-width: 0; display: flex; flex-direction: column; }
+        .voltr-grid { display: none; grid-template-columns: 320px 1fr; gap: 25px; flex-grow: 1; align-items: stretch; }
+        .voltr-grid.active { display: grid; }
+        
+        .inputs { display: flex; flex-direction: column; }
+        .input-row { margin-bottom: 12px; }
+        .target-selector { background-color: #44475a !important; border: 1px solid #bd93f9 !important; color: #bd93f9 !important; font-weight: bold; margin-bottom: 20px; }
+        .method-selector { background-color: #282a36 !important; border: 1px dashed #ffb86c !important; color: #ffb86c !important; margin-bottom: 10px; }
+        label { display: block; color: #8be9fd; font-size: 11px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; }
+        input, select { width: 100%; background-color: #282a36; color: #f8f8f2; border: 1px solid #44475a; padding: 10px; border-radius: 5px; font-family: inherit; outline: none; box-sizing: border-box; }
+        input:focus, select:focus { border-color: #bd93f9; }
+        .result-box { color: #50fa7b; font-size: 20px; font-weight: bold; margin: 15px 0; padding: 15px; border: 1px dashed #6272a4; text-align: center; background: rgba(80, 250, 123, 0.05); margin-top: auto; }
+        
+        /* Formeln & Legende */
+        .formula-card { background-color: #282a36; padding: 25px; border-radius: 10px; border: 1px solid #44475a; display: flex; flex-direction: column; justify-content: space-between; }
+        .formula-title { color: #ff79c6; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; text-align: center; border-bottom: 1px solid #44475a; padding-bottom: 5px; }
+        .math-container { min-height: 70px; padding: 5px 0; text-align: center; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+        .math-container::-webkit-scrollbar { display: none; }
+        .katex-display { margin: 0 !important; }
+        .legende-container { padding: 15px; background: rgba(98, 114, 164, 0.1); border-radius: 8px; border: 1px solid #44475a; margin-bottom: 15px; margin-top: 15px; }
+        .legende-title { color: #8be9fd; font-size: 12px; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(139, 233, 253, 0.3); padding-bottom: 4px; }
+        .legende-grid { display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 12px; color: #f8f8f2; }
+        .legende-item { display: flex; align-items: baseline; }
+        .legende-symbol { font-weight: bold; min-width: 45px; display: inline-block; font-size: 14px; }
+        
+        .btn-export-main { background: #f8f8f2; color: #21222c; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; margin-top: auto; transition: 0.2s; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-export-main:hover { background: #bd93f9; color: white; }
+
+        /* Global History (EXAKT GLEICHE HÖHE WIE FORMEL-CARD DANK STRETCH) */
+        .history-card { background-color: #282a36; padding: 25px; border-radius: 10px; border: 1px solid #44475a; display: flex; flex-direction: column; box-sizing: border-box; }
+        
+        /* 5-Sekunden Ladebalken */
+        .timer-container { height: 6px; background: #44475a; border-radius: 3px; margin-bottom: 15px; overflow: hidden; display: none; width: 100%; }
+        .timer-bar { height: 100%; width: 0%; background: #50fa7b; }
+        .timer-text { font-size: 11px; color: #8be9fd; text-align: center; margin-bottom: 5px; display: none; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+        
+        .history-list { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; scrollbar-width: none; }
+        .history-list::-webkit-scrollbar { display: none; }
+        .history-item { font-size: 11px; padding: 10px; border-bottom: 1px solid #44475a; color: #f8f8f2; display: flex; justify-content: space-between; align-items: center; }
+        .history-text span { color: #50fa7b; font-weight: bold; display: block; font-size: 14px; margin-top: 3px; }
+        .history-text b { color: #bd93f9; text-transform: uppercase; }
+        .btn-copy { background: #6272a4; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-left: 10px; flex: 0 0 auto; }
+        .btn-copy:hover { background: #8be9fd; color: #21222c; }
+        
+        /* Löschen Button ganz am Boden */
+        .btn-clear { background: #ff5555; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; font-family: inherit; flex: 0 0 auto; margin-top: auto; }
+
+        @media (max-width: 1100px) { 
+            .content-wrapper { grid-template-columns: 1fr; }
+            .voltr-grid { grid-template-columns: 1fr; } 
+            .history-card { min-height: 400px; }
+        }
+
+        /* --- PERFEKTE A4 DRUCK ANSICHT --- */
+        #print-area { display: none; }
+        @media print {
+            @page { size: A4; margin: 20mm; }
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .voltr-main-container { display: none !important; }
+            #print-area { display: block !important; width: 100%; font-family: Arial, sans-serif; }
+            #print-area .katex * { color: black !important; border-color: black !important; }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div id="print-area"></div>
+
+<div class="voltr-main-container">
+    <div class="voltr-header">voltr²</div>
+    
+    <div class="nav-dashboard">
+        <div class="nav-group">
+            <div class="nav-title" style="color: #8be9fd; border-bottom-color: rgba(139, 233, 253, 0.3);">Basis & Leitung</div>
+            <button class="voltr-tab-btn active" onclick="vTab(event, 'q')">Querschnitt</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'p')">Leistung</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'u')">Spannungsfall</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'pvdc')">DC-Spannungsfall</button>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title" style="color: #ff5555; border-bottom-color: rgba(255, 85, 85, 0.3);">NIN & Schutz</div>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'ik')">Kurzschluss (Ik)</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'ubl')">Überlastschutz</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'abs')">Abschaltung (Zs)</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'iso')">NIN-Messungen</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'iz')">Verlegeart (Iz)</button>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title" style="color: #ffb86c; border-bottom-color: rgba(255, 184, 108, 0.3);">Maschinen & Netz</div>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'mot')">Motor</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'sd')">Stern-Dreieck (Y/Δ)</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'trf')">Transformator</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'cos')">Kompensation (Qc)</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'cap')">Kondensator (C)</button>
+        </div>
+        <div class="nav-group">
+            <div class="nav-title" style="color: #50fa7b; border-bottom-color: rgba(80, 250, 123, 0.3);">Gebäude & Anlagen</div>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'pv')">PV-Anlagen</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'usv')">USV & Batterie</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'emob')">E-Mobilität</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'bel')">Beleuchtung</button>
+            <button class="voltr-tab-btn" onclick="vTab(event, 'thm')">Wärmetechnik</button>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        
+        <div class="tabs-container">
+            
+            <div id="q" class="voltr-grid active">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="q-target" class="target-selector" onchange="tglQ(); runQ(false)">
+                            <option value="A">Querschnitt (A)</option>
+                            <option value="L">Länge (L)</option>
+                            <option value="I">Strom (I)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Material (γ)</label><select id="q-mat" onchange="runQ(true)"><option value="56">Kupfer (56)</option><option value="37">Aluminium (37)</option></select></div>
+                    <div class="input-row"><label>Netzform (f)</label><select id="q-netz" onchange="runQ(true)"><option value="1.732">Drehstrom</option><option value="2.0">Wechselstrom</option></select></div>
+                    <div class="input-row" id="row-q-a" style="display:none;"><label>Querschnitt (A) [mm²]</label><input type="number" id="q-a" value="2.5" step="0.5" oninput="runQ(true)"></div>
+                    <div class="input-row" id="row-q-l"><label>Länge (L) [m]</label><input type="number" id="q-l" value="25" oninput="runQ(true)"></div>
+                    <div class="input-row" id="row-q-i"><label>Strom (I) [A]</label><input type="number" id="q-i" value="16" oninput="runQ(true)"></div>
+                    <div class="input-row"><label>Spannung (U) [V]</label><input type="number" id="q-u" value="400" oninput="runQ(true)"></div>
+                    <div class="input-row"><label>Cos φ</label><input type="number" id="q-cos" value="0.90" step="0.01" oninput="runQ(true)"></div>
+                    <div class="result-box" id="q-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="q-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="q-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">A</span>Leiterquerschnitt in mm²</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">f</span>Netzfaktor (2.0 oder √3)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">L</span>Einfache Leitungslänge in m</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Bemessungsstrom in Ampere</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#f1fa8c;">cos φ</span>Leistungsfaktor</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">γ</span>Leitfähigkeit (Cu=56 / Al=37)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Ua</span>Spannungsfall (3% von U)</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="p" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="p-target" class="target-selector" onchange="tglP(); runP(false)">
+                            <option value="P">Leistung (P)</option>
+                            <option value="I">Strom (I)</option>
+                            <option value="U">Spannung (U)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Netzform (f)</label><select id="p-netz" onchange="runP(true)"><option value="1.732">Drehstrom</option><option value="1.0">Wechselstrom</option></select></div>
+                    <div class="input-row" id="row-p-p" style="display:none;"><label>Leistung (P) [W]</label><input type="number" id="p-p" value="11080" step="10" oninput="runP(true)"></div>
+                    <div class="input-row" id="row-p-u"><label>Spannung (U) [V]</label><input type="number" id="p-u" value="400" oninput="runP(true)"></div>
+                    <div class="input-row" id="row-p-i"><label>Strom (I) [A]</label><input type="number" id="p-i" value="16" oninput="runP(true)"></div>
+                    <div class="result-box" id="p-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="p-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="p-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">P</span>Wirkleistung in Watt</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">U</span>Spannung in Volt</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Stromstärke in Ampere</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">f</span>Verkettungsfaktor (√3)</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="u" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Berechnungsmethode</label>
+                        <select id="u-meth" class="method-selector" onchange="tglU(); runU(false)">
+                            <option value="simp">Einfach (Ohmsch)</option>
+                            <option value="exact">Exakt (mit Reaktanzbelag)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="u-target" class="target-selector" onchange="tglU(); runU(false)">
+                            <option value="DU">Spannungsfall (ΔU)</option>
+                            <option value="L">Länge (l)</option>
+                            <option value="A" id="opt-u-a">Querschnitt (A)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-u-mat"><label>Material (ρ)</label><select id="u-mat" onchange="runU(true)"><option value="0.0178">Kupfer</option><option value="0.0278">Aluminium</option></select></div>
+                    <div class="input-row" id="row-u-du" style="display:none;"><label>Spannungsfall (ΔU) [V]</label><input type="number" id="u-du" value="6.9" step="0.1" oninput="runU(true)"></div>
+                    <div class="input-row" id="row-u-l"><label>Länge (l) [m]</label><input type="number" id="u-l" value="25" oninput="runU(true)"></div>
+                    <div class="input-row"><label>Strom (I) [A]</label><input type="number" id="u-i" value="16" oninput="runU(true)"></div>
+                    <div class="input-row" id="row-u-a-input"><label>Querschnitt (A) [mm²]</label><input type="number" id="u-a" value="2.5" oninput="runU(true)"></div>
+                    <div class="input-row" id="row-u-r" style="display:none;"><label>Wirkwiderstandsbelag (R') [Ω/km]</label><input type="number" id="u-r" value="0.124" step="0.001" oninput="runU(true)"></div>
+                    <div class="input-row" id="row-u-x" style="display:none;"><label>Reaktanzbelag (X') [Ω/km]</label><input type="number" id="u-x" value="0.08" step="0.001" oninput="runU(true)"></div>
+                    <div class="input-row" id="row-u-cos" style="display:none;"><label>Cos φ</label><input type="number" id="u-cos" value="0.85" step="0.01" oninput="runU(true)"></div>
+                    <div class="result-box" id="u-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="u-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="u-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid" id="u-legende"></div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="ik" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="ik-target" class="target-selector" onchange="tglIk(); runIk(false)">
+                            <option value="IK">Kurzschlussstrom (Ik)</option>
+                            <option value="ZS">Schleifenimpedanz (Zs)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Spannung (U) [V]</label><input type="number" id="ik-u" value="230" oninput="runIk(true)"></div>
+                    <div class="input-row"><label>Spannungsfaktor (c)</label><input type="number" id="ik-c" value="0.95" step="0.05" oninput="runIk(true)"></div>
+                    <div class="input-row" id="row-ik-zs"><label>Schleife (Zs) [Ω]</label><input type="number" id="ik-zs" value="0.5" step="0.01" oninput="runIk(true)"></div>
+                    <div class="input-row" id="row-ik-ik" style="display:none;"><label>Kurzschlussstrom (Ik) [A]</label><input type="number" id="ik-ik" value="437" oninput="runIk(true)"></div>
+                    <div class="result-box" id="ik-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="ik-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="ik-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Ik</span>Kurzschlussstrom in Ampere</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">U</span>Nennspannung L-PE (V)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">c</span>Spannungsfaktor (0.95)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">Zs</span>Schleifenimpedanz in Ohm</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="iz" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="iz-target" class="target-selector" onchange="tglIz(); runIz(false)">
+                            <option value="IZ">Zul. Strombelastbarkeit (Iz)</option>
+                            <option value="A">Mindestquerschnitt (A)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Verlegeart (NIN)</label>
+                        <select id="iz-meth" onchange="runIz(true)">
+                            <option value="A1">A1 (In wärmedämmender Wand)</option>
+                            <option value="B1">B1 (Im Rohr auf Holzwand)</option>
+                            <option value="C">C (Direkt auf der Wand)</option>
+                            <option value="E">E (Frei in der Luft)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Belastete Adern</label>
+                        <select id="iz-cores" onchange="runIz(true)">
+                            <option value="3">3 Adern (Drehstrom)</option>
+                            <option value="2">2 Adern (Wechselstrom)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-iz-a"><label>Querschnitt (A) [mm²]</label>
+                        <select id="iz-a" onchange="runIz(true)">
+                            <option value="1.5">1.5</option><option value="2.5" selected>2.5</option><option value="4">4</option>
+                            <option value="6">6</option><option value="10">10</option><option value="16">16</option>
+                            <option value="25">25</option><option value="35">35</option><option value="50">50</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-iz-ib" style="display:none;"><label>Betriebsstrom (Ib) [A]</label>
+                        <input type="number" id="iz-ib" value="16" oninput="runIz(true)">
+                    </div>
+                    <div class="input-row"><label>Umgebungstemperatur (f1)</label>
+                        <select id="iz-f1" onchange="runIz(true)">
+                            <option value="1.0">30°C (Faktor 1.00)</option>
+                            <option value="0.94">35°C (Faktor 0.94)</option>
+                            <option value="0.87">40°C (Faktor 0.87)</option>
+                            <option value="0.79">45°C (Faktor 0.79)</option>
+                            <option value="0.71">50°C (Faktor 0.71)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Häufung (f2)</label>
+                        <select id="iz-f2" onchange="runIz(true)">
+                            <option value="1.0">1 Stromkreis (Faktor 1.00)</option>
+                            <option value="0.8">2 Stromkreise (Faktor 0.80)</option>
+                            <option value="0.7">3 Stromkreise (Faktor 0.70)</option>
+                            <option value="0.65">4 Stromkreise (Faktor 0.65)</option>
+                            <option value="0.60">5 Stromkreise (Faktor 0.60)</option>
+                            <option value="0.57">6 Stromkreise (Faktor 0.57)</option>
+                        </select>
+                    </div>
+                    <div class="result-box" id="iz-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="iz-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="iz-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid" id="iz-legende"></div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="ubl" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="ubl-target" class="target-selector" onchange="tglUbl(); runUbl(false)">
+                            <option value="I2">Max. Auslösestrom (I₂)</option>
+                            <option value="IZ">Min. Strombelastbarkeit (Iz)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Betriebsstrom (Ib) [A]</label><input type="number" id="ubl-ib" value="10" oninput="runUbl(true)"></div>
+                    <div class="input-row"><label>Nennstrom Schutz (In) [A]</label><input type="number" id="ubl-in" value="13" oninput="runUbl(true)"></div>
+                    <div class="input-row" id="row-ubl-iz"><label>Zul. Strombelastbarkeit (Iz) [A]</label><input type="number" id="ubl-iz" value="16.5" step="0.1" oninput="runUbl(true)"></div>
+                    <div class="input-row" id="row-ubl-i2" style="display:none;"><label>Konv. Auslösestrom (I₂) [A]</label><input type="number" id="ubl-i2" value="23.9" step="0.1" oninput="runUbl(true)"></div>
+                    <div class="input-row"><label>Auslösefaktor</label><input type="number" id="ubl-k" value="1.45" step="0.05" oninput="runUbl(true)"></div>
+                    <div class="result-box" id="ubl-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="ubl-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="ubl-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Ib</span>Betriebsstrom der Anlage</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">In</span>Nennstrom der Schutzeinrichtung</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">Iz</span>Zulässige Strombelastbarkeit</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">I₂</span>Konventioneller Auslösestrom</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="abs" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="abs-target" class="target-selector" onchange="tglAbs(); runAbs(false)">
+                            <option value="ZS">Max. Schleifenimpedanz (Zs)</option>
+                            <option value="IA">Fehlerstrom (Ia)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Spannung gegen Erde (U₀) [V]</label><input type="number" id="abs-u0" value="230" oninput="runAbs(true)"></div>
+                    <div class="input-row" id="row-abs-ia"><label>Auslösestrom (Ia) [A]</label><input type="number" id="abs-ia" value="65" oninput="runAbs(true)"></div>
+                    <div class="input-row" id="row-abs-zs" style="display:none;"><label>Schleifenimpedanz (Zs) [Ω]</label><input type="number" id="abs-zs" value="3.5" step="0.01" oninput="runAbs(true)"></div>
+                    <div class="result-box" id="abs-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="abs-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="abs-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">U₀</span>Spannung gegen Erde (230V)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">Zs</span>Fehlerschleifenimpedanz in Ohm</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Ia</span>Auslösestrom für verlangte Zeit</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="iso" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="iso-target" class="target-selector" onchange="tglIso(); runIso(false)">
+                            <option value="RISO">Isolationswiderstand (R_iso)</option>
+                            <option value="RPE">Schutzleiterwiderstand (R_PE)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-iso-u"><label>Prüfspannung (U_Prüf) [V]</label><input type="number" id="iso-u" value="500" oninput="runIso(true)"></div>
+                    <div class="input-row" id="row-iso-ileck"><label>Leckstrom (I_leck) [mA]</label><input type="number" id="iso-ileck" value="0.25" step="0.05" oninput="runIso(true)"></div>
+                    <div class="input-row" id="row-iso-um" style="display:none;"><label>Spannungsabfall (U) [V]</label><input type="number" id="iso-um" value="0.1" step="0.01" oninput="runIso(true)"></div>
+                    <div class="input-row" id="row-iso-im" style="display:none;"><label>Messstrom (I) [A]</label><input type="number" id="iso-im" value="0.2" step="0.05" oninput="runIso(true)"></div>
+                    <div class="result-box" id="iso-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="iso-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="iso-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid" id="iso-legende"></div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="cos" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="cos-target" class="target-selector" onchange="tglCos(); runCos(false)">
+                            <option value="QC">Kondensatorleistung (Qc)</option>
+                            <option value="P">Wirkleistung (P)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-cos-p"><label>Leistung (P) [kW]</label><input type="number" id="cos-p" value="50" oninput="runCos(true)"></div>
+                    <div class="input-row" id="row-cos-qc" style="display:none;"><label>Komp.-Leistung (Qc) [kvar]</label><input type="number" id="cos-qc" value="34.5" oninput="runCos(true)"></div>
+                    <div class="input-row"><label>Cos Φ₁ (Ist)</label><input type="number" id="cos-phi1" value="0.70" step="0.01" oninput="runCos(true)"></div>
+                    <div class="input-row"><label>Cos Φ₂ (Ziel)</label><input type="number" id="cos-phi2" value="0.95" step="0.01" oninput="runCos(true)"></div>
+                    <div class="result-box" id="cos-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="cos-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="cos-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">Qc</span>Kondensatorleistung (kvar)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">P</span>Wirkleistung in kW</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">φ₁</span>Aktueller Leistungsfaktor</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">φ₂</span>Gewünschter Leistungsfaktor</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="cap" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="cap-target" class="target-selector" onchange="tglCap(); runCap(false)">
+                            <option value="C">Kapazität (C) in µF</option>
+                            <option value="QC">Komp.-Leistung (Qc) in kvar</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Kondensatorschaltung (k)</label>
+                        <select id="cap-k" onchange="runCap(true)">
+                            <option value="3">Dreieckschaltung (3)</option>
+                            <option value="1">Sternschaltung (1)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-cap-qc"><label>Komp.-Leistung (Qc) [kvar]</label><input type="number" id="cap-qc" value="34.5" step="0.1" oninput="runCap(true)"></div>
+                    <div class="input-row" id="row-cap-c" style="display:none;"><label>Kapazität (C) [µF]</label><input type="number" id="cap-c" value="228.8" step="0.1" oninput="runCap(true)"></div>
+                    <div class="input-row"><label>Netzspannung (U) [V]</label><input type="number" id="cap-u" value="400" oninput="runCap(true)"></div>
+                    <div class="input-row"><label>Frequenz (f) [Hz]</label><input type="number" id="cap-f" value="50" oninput="runCap(true)"></div>
+                    <div class="result-box" id="cap-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="cap-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="cap-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">C</span>Kapazität der Batterie in Farad</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Qc</span>Gesamte Kompensationsleistung</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">k</span>Schaltungsfaktor (Dreieck=3, Stern=1)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">f</span>Netzfrequenz in Hz</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">U</span>Nennspannung in Volt</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="mot" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="mot-target" class="target-selector" onchange="tglMot(); runMot(false)">
+                            <option value="M">Drehmoment (M)</option>
+                            <option value="P">Leistung (P)</option>
+                            <option value="N">Drehzahl (n)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-mot-m" style="display:none;"><label>Drehmoment (M) [Nm]</label><input type="number" id="mot-m" value="49.4" oninput="runMot(true)"></div>
+                    <div class="input-row" id="row-mot-p"><label>Leistung (P) [kW]</label><input type="number" id="mot-p" value="7.5" oninput="runMot(true)"></div>
+                    <div class="input-row" id="row-mot-n"><label>Drehzahl (n) [min⁻¹]</label><input type="number" id="mot-n" value="1450" oninput="runMot(true)"></div>
+                    <div class="result-box" id="mot-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="mot-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="mot-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">M</span>Drehmoment an der Welle in Nm</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">P</span>Mechanische Abgabeleistung in kW</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">n</span>Nenndrehzahl in min⁻¹</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="sd" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="sd-target" class="target-selector" onchange="tglSd(); runSd(false)">
+                            <option value="ID">Dreieckstrom (IΔ)</option>
+                            <option value="IPH">Strangstrom (I_ph)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-sd-id" style="display:none;"><label>Dreieckstrom (IΔ) [A]</label><input type="number" id="sd-id" value="17.3" oninput="runSd(true)"></div>
+                    <div class="input-row" id="row-sd-iph"><label>Strangstrom (I_ph) [A]</label><input type="number" id="sd-iph" value="10" oninput="runSd(true)"></div>
+                    <div class="result-box" id="sd-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="sd-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="sd-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">IΔ</span>Leiterstrom bei Dreieckschaltung (A)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Iph</span>Strangstrom (Wicklungsstrang)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">√3</span>Verkettungsfaktor</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="trf" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="trf-target" class="target-selector" onchange="tglTrf(); runTrf(false)">
+                            <option value="IK2">Kurzschlussstrom (Ik2)</option>
+                            <option value="SN">Scheinleistung (Sn)</option>
+                            <option value="UK">Kurzschlussspannung (uk)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-trf-ik2" style="display:none;"><label>NS-Kurzschluss (Ik2) [A]</label><input type="number" id="trf-ik2" value="22733" oninput="runTrf(true)"></div>
+                    <div class="input-row" id="row-trf-sn"><label>Scheinleistung (Sn) [VA]</label><input type="number" id="trf-sn" value="630000" step="1000" oninput="runTrf(true)"></div>
+                    <div class="input-row"><label>Sekundärspannung (U2n) [V]</label><input type="number" id="trf-u2n" value="400" oninput="runTrf(true)"></div>
+                    <div class="input-row" id="row-trf-uk"><label>Kurzschlussspg. (uk) [%]</label><input type="number" id="trf-uk" value="4" step="0.5" oninput="runTrf(true)"></div>
+                    <div class="result-box" id="trf-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="trf-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="trf-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Ik2</span>Unbeeinflusster KS-Strom NS-Seite</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">Sn</span>Bemessungsscheinleistung Trafo (VA)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">U2n</span>Bemessungsspannung Sekundär (V)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">uk</span>Kurzschlussspannung in Prozent</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="pv" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="pv-target" class="target-selector" onchange="tglPv(); runPv(false)">
+                            <option value="UMAX">Maximalspannung (Kälte) Umax</option>
+                            <option value="USTR">String-Spannung (n Module)</option>
+                            <option value="ISC">Parallel-Kurzschluss (m Strings)</option>
+                            <option value="PMPP">Generatorleistung (Pmpp)</option>
+                        </select>
+                    </div>
+                    <div id="grp-pv-umax">
+                        <div class="input-row"><label>Uoc (STC 25°C) [V]</label><input type="number" id="pv-uoc" value="40" oninput="runPv(true)"></div>
+                        <div class="input-row"><label>Temp. Min (T_min) [°C]</label><input type="number" id="pv-t" value="-10" oninput="runPv(true)"></div>
+                        <div class="input-row"><label>Koeffizient (TK) [V/K]</label><input type="number" id="pv-tk" value="-0.12" step="0.01" oninput="runPv(true)"></div>
+                    </div>
+                    <div id="grp-pv-ustr" style="display:none;">
+                        <div class="input-row"><label>Module in Serie (n)</label><input type="number" id="pv-n" value="18" oninput="runPv(true)"></div>
+                        <div class="input-row"><label>Modulspannung (U) [V]</label><input type="number" id="pv-umod" value="35" oninput="runPv(true)"></div>
+                    </div>
+                    <div id="grp-pv-isc" style="display:none;">
+                        <div class="input-row"><label>Parallele Strings (m)</label><input type="number" id="pv-m" value="3" oninput="runPv(true)"></div>
+                        <div class="input-row"><label>Strangstrom (Isc) [A]</label><input type="number" id="pv-istr" value="10.5" step="0.1" oninput="runPv(true)"></div>
+                    </div>
+                    <div id="grp-pv-pmpp" style="display:none;">
+                        <div class="input-row"><label>String-Spannung (Umpp) [V]</label><input type="number" id="pv-umpp" value="630" oninput="runPv(true)"></div>
+                        <div class="input-row"><label>String-Strom (Impp) [A]</label><input type="number" id="pv-impp" value="10.2" step="0.1" oninput="runPv(true)"></div>
+                    </div>
+                    <div class="result-box" id="pv-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="pv-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="pv-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid" id="pv-legende"></div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="usv" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="usv-target" class="target-selector" onchange="tglUsv(); runUsv(false)">
+                            <option value="C">Batteriekapazität (C)</option>
+                            <option value="T">Überbrückungszeit (t)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Wirkleistung Last (P) [W]</label><input type="number" id="usv-p" value="2000" oninput="runUsv(true)"></div>
+                    <div class="input-row" id="row-usv-t"><label>Überbrückungszeit (t) [h]</label><input type="number" id="usv-t" value="2" step="0.5" oninput="runUsv(true)"></div>
+                    <div class="input-row" id="row-usv-c" style="display:none;"><label>Batteriekapazität (C) [Ah]</label><input type="number" id="usv-c" value="100" oninput="runUsv(true)"></div>
+                    <div class="input-row"><label>Systemspannung DC (U) [V]</label><input type="number" id="usv-u" value="48" oninput="runUsv(true)"></div>
+                    <div class="input-row"><label>WR-Wirkungsgrad (η)</label><input type="number" id="usv-eta" value="0.9" step="0.05" oninput="runUsv(true)"></div>
+                    <div class="result-box" id="usv-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="usv-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="usv-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">C</span>Benötigte Batteriekapazität (Ah)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">P</span>Wirkleistung der Last (W)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">t</span>Geforderte Überbrückungszeit (h)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">U</span>DC-Systemspannung der Batterie (V)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">η</span>Wirkungsgrad Wechselrichter</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="pvdc" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="pvdc-target" class="target-selector" onchange="tglPvdc(); runPvdc(false)">
+                            <option value="DU">Spannungsfall DC (ΔU)</option>
+                            <option value="A">Querschnitt DC (A)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Material (γ)</label>
+                        <select id="pvdc-mat" onchange="runPvdc(true)">
+                            <option value="56">Kupfer (56)</option>
+                            <option value="37">Aluminium (37)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-pvdc-du" style="display:none;"><label>Max. Spannungsfall (ΔU) [V]</label><input type="number" id="pvdc-du" value="6.0" step="0.1" oninput="runPvdc(true)"></div>
+                    <div class="input-row"><label>Einfache Leitungslänge (L) [m]</label><input type="number" id="pvdc-l" value="35" oninput="runPvdc(true)"></div>
+                    <div class="input-row"><label>Betriebsstrom (I) [A]</label><input type="number" id="pvdc-i" value="12.5" step="0.1" oninput="runPvdc(true)"></div>
+                    <div class="input-row" id="row-pvdc-a"><label>Querschnitt (A) [mm²]</label><input type="number" id="pvdc-a" value="6" step="0.5" oninput="runPvdc(true)"></div>
+                    <div class="result-box" id="pvdc-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="pvdc-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="pvdc-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">ΔU</span>Spannungsfall im DC-Kreis (V)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">L</span>Einfache Leitungslänge</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Strom im DC-Kreis (A)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">γ</span>Leitfähigkeit des Materials</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">A</span>Kabelquerschnitt in mm²</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="emob" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="emob-target" class="target-selector" onchange="tglEmob(); runEmob(false)">
+                            <option value="P">Ladeleistung (P)</option>
+                            <option value="I">Ladestrom (I)</option>
+                        </select>
+                    </div>
+                    <div class="input-row"><label>Ladeart</label>
+                        <select id="emob-netz" onchange="runEmob(true)">
+                            <option value="1.732">3-phasig (3~)</option>
+                            <option value="1.0">1-phasig (1~)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-emob-p" style="display:none;"><label>Ladeleistung (P) [W]</label><input type="number" id="emob-p" value="11000" step="100" oninput="runEmob(true)"></div>
+                    <div class="input-row"><label>Spannung (U) [V]</label><input type="number" id="emob-u" value="400" oninput="runEmob(true)"></div>
+                    <div class="input-row" id="row-emob-i"><label>Ladestrom (I) [A]</label><input type="number" id="emob-i" value="16" oninput="runEmob(true)"></div>
+                    <div class="input-row"><label>Cos φ (Modern ≈ 1)</label><input type="number" id="emob-cos" value="1.0" step="0.01" oninput="runEmob(true)"></div>
+                    <div class="result-box" id="emob-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="emob-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="emob-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">P</span>Ladeleistung in Watt</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">U</span>Netzspannung (400V oder 230V)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Ladestrom pro Phase in Ampere</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">f</span>Verkettungsfaktor (√3)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#f1fa8c;">cos φ</span>Leistungsfaktor</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="bel" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="bel-target" class="target-selector" onchange="tglBel(); runBel(false)">
+                            <option value="N">Leuchtenanzahl (n)</option>
+                            <option value="EM">Beleuchtungsstärke (Em)</option>
+                            <option value="A">Raumfläche (A)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-bel-n" style="display:none;"><label>Anzahl Leuchten (n)</label><input type="number" id="bel-n" value="13" oninput="runBel(true)"></div>
+                    <div class="input-row" id="row-bel-em"><label>Beleuchtungsstärke (Em) [lx]</label><input type="number" id="bel-em" value="500" oninput="runBel(true)"></div>
+                    <div class="input-row" id="row-bel-a"><label>Raumfläche (A) [m²]</label><input type="number" id="bel-a" value="50" oninput="runBel(true)"></div>
+                    <div class="input-row"><label>Lichtstrom (ΦL) [lm]</label><input type="number" id="bel-phi" value="4000" oninput="runBel(true)"></div>
+                    <div class="input-row"><label>Beleuchtungswirkungsgrad (ηB)</label><input type="number" id="bel-eta" value="0.6" step="0.05" oninput="runBel(true)"></div>
+                    <div class="input-row"><label>Wartungsfaktor (WF)</label><input type="number" id="bel-wf" value="0.8" step="0.05" oninput="runBel(true)"></div>
+                    <div class="result-box" id="bel-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="bel-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="bel-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">n</span>Anzahl Leuchten (Stück)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Em</span>Mittlere Beleuchtungsstärke (lx)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">A</span>Raumfläche (m²)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">ΦL</span>Lichtstrom pro Leuchte (lm)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">ηB</span>Beleuchtungswirkungsgrad</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#f1fa8c;">WF</span>Wartungsfaktor</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+            <div id="thm" class="voltr-grid">
+                <div class="inputs">
+                    <div class="input-row"><label style="color:#ff79c6;">Zweck (Berechne)</label>
+                        <select id="thm-target" class="target-selector" onchange="tglThm(); runThm(false)">
+                            <option value="P">Heizleistung (P)</option>
+                            <option value="T">Aufheizzeit (t)</option>
+                            <option value="M">Wassermenge (m)</option>
+                        </select>
+                    </div>
+                    <div class="input-row" id="row-thm-p" style="display:none;"><label>Heizleistung (P) [W]</label><input type="number" id="thm-p" value="4132" oninput="runThm(true)"></div>
+                    <div class="input-row" id="row-thm-m"><label>Wassermenge (m) [Liter/kg]</label><input type="number" id="thm-m" value="300" oninput="runThm(true)"></div>
+                    <div class="input-row"><label>Spez. Wärme (c) [Wh/kgK]</label><input type="number" id="thm-c" value="1.163" readonly style="background:#191a21;"></div>
+                    <div class="input-row"><label>Temp.-Differenz (Δϑ) [K]</label><input type="number" id="thm-dt" value="45" oninput="runThm(true)"></div>
+                    <div class="input-row" id="row-thm-t"><label>Aufheizzeit (t) [h]</label><input type="number" id="thm-t" value="4" oninput="runThm(true)"></div>
+                    <div class="input-row"><label>Wirkungsgrad (η)</label><input type="number" id="thm-eta" value="0.95" step="0.01" oninput="runThm(true)"></div>
+                    <div class="result-box" id="thm-res">--</div>
+                </div>
+                <div class="formula-card">
+                    <div>
+                        <div class="formula-title">Theoretische Basis</div><div class="math-container" id="thm-f-base"></div>
+                        <div class="formula-title" style="margin-top:20px;">Berechnung</div><div class="math-container" id="thm-f-live"></div>
+                    </div>
+                    <div class="legende-container"><div class="legende-title">Legende</div><div class="legende-grid">
+                        <div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">P</span>Heizleistung (W)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">m</span>Wassermasse / Volumen (kg oder Liter)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">c</span>Spezifische Wärmekapazität</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Δϑ</span>Temperaturdifferenz in Kelvin</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">t</span>Aufheizzeit in Stunden (h)</div>
+                        <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">η</span>Wirkungsgrad</div>
+                    </div></div>
+                    <button class="btn-export-main" onclick="printA4()">🖨️ ALS A4 DRUCKEN / PDF</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="history-card">
+            <div class="formula-title">GLOBALER VERLAUF</div>
+            <div id="timer-text" class="timer-text">Speichere in Verlauf...</div>
+            <div id="timer-container" class="timer-container"><div id="timer-bar" class="timer-bar"></div></div>
+            <div class="history-list" id="global-hist"></div>
+            <button class="btn-clear" onclick="clearGlobalHist()">LÖSCHEN</button>
+        </div>
+
+    </div>
+
+    <div style="text-align: center; font-size: 11px; color: #6272a4; margin-top: 25px;">© 2026 by Manuel Tüscher | voltr²</div>
+</div>
+
+<script>
+    // --- CACHE & SERVICE WORKER KILLER ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) { registration.unregister(); }
+        });
+    }
+    if ('caches' in window) {
+        caches.keys().then(names => { for (let name of names) { caches.delete(name); } });
+    }
+
+    // --- KOPIERSCHUTZ (Tasten blockieren) ---
+    document.addEventListener('keydown', function(e) {
+        if(e.keyCode == 123) { e.preventDefault(); return false; } // F12
+        if(e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83)) { e.preventDefault(); return false; } // Strg+U, Strg+S
+    });
+
+    // --- DRUCK FUNKTION (Baut ein sauberes A4 Dokument) ---
+    function printA4() {
+        const activeTab = document.querySelector('.voltr-grid.active');
+        if(!activeTab) return;
+        
+        const tabId = activeTab.id;
+        const tabBtn = document.querySelector(`.voltr-tab-btn[onclick*="'${tabId}'"]`);
+        const tabName = tabBtn ? tabBtn.innerText : "Berechnung";
+        
+        let inputsHtml = '<table style="width:100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">';
+        inputsHtml += '<tr><th style="text-align:left; border-bottom:1px solid #ccc; padding:5px 0;">Parameter</th><th style="text-align:right; border-bottom:1px solid #ccc; padding:5px 0;">Wert</th></tr>';
+        activeTab.querySelectorAll('.input-row').forEach(row => {
+            if(row.style.display !== 'none') {
+                const label = row.querySelector('label').innerText;
+                const input = row.querySelector('input, select');
+                if(!input) return;
+                let val = input.tagName.toLowerCase() === 'select' ? input.options[input.selectedIndex].text : input.value;
+                inputsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #eee;">${label}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #eee;"><b>${val}</b></td></tr>`;
+            }
+        });
+        inputsHtml += '</table>';
+        
+        const fBaseNode = activeTab.querySelector('.math-container:nth-of-type(1)');
+        const fLiveNode = activeTab.querySelector('.math-container:nth-of-type(2)');
+        const fBase = fBaseNode ? fBaseNode.innerHTML : '';
+        const fLive = fLiveNode ? fLiveNode.innerHTML : '';
+        
+        const resBox = activeTab.querySelector('.result-box');
+        let resRaw = resBox ? resBox.innerText : '';
+        resRaw = cleanVal(resRaw);
+        if(resRaw === '--' || !resRaw) resRaw = 'Noch keine Werte berechnet';
+        
+        let legHtml = '<table style="width:100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;">';
+        activeTab.querySelectorAll('.legende-item').forEach(item => {
+            const sym = item.querySelector('.legende-symbol').innerText;
+            const desc = item.innerText.replace(sym, '').trim();
+            legHtml += `<tr><td style="width: 50px; font-weight: bold; padding: 4px 0;">${sym}</td><td style="padding: 4px 0;">${desc}</td></tr>`;
+        });
+        legHtml += '</table>';
+        
+        const printArea = document.getElementById('print-area');
+        const now = new Date().toLocaleString('de-CH');
+        
+        printArea.innerHTML = `
+            <div style="border-bottom: 3px solid black; padding-bottom: 10px; margin-bottom: 25px;">
+                <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">voltr²</h1>
+                <div style="font-size: 14px; color: #555;">Professional Electrical Toolbox &bull; Protokoll</div>
+            </div>
+            <h2 style="font-size: 20px; text-transform: uppercase; margin-bottom: 20px;">${tabName}</h2>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #333; border-bottom: 1px solid #ccc;">Eingabewerte</h3>
+            ${inputsHtml}
+            <h3 style="font-size: 16px; margin-bottom: 10px; margin-top: 30px; color: #333; border-bottom: 1px solid #ccc;">Berechnung</h3>
+            <div style="text-align: center; margin: 15px 0;">${fBase}</div>
+            <div style="text-align: center; margin: 15px 0;">${fLive}</div>
+            <div style="border: 2px solid black; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; margin: 30px 0; background-color: #f9f9f9; color: black;">
+                ${resRaw}
+            </div>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #333; border-bottom: 1px solid #ccc;">Legende</h3>
+            ${legHtml}
+            <div style="margin-top: 50px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #ccc; padding-top: 10px;">
+                Erstellt am ${now} durch voltr²
+            </div>
+        `;
+        window.print();
+    }
+
+    // --- COPY FUNKTION ---
+    function sysCopy(text, successMsg) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => alert(successMsg)).catch(() => fallbackCopy(text, successMsg));
+        } else {
+            fallbackCopy(text, successMsg);
+        }
+    }
+    function fallbackCopy(text, successMsg) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); alert(successMsg); } catch (err) {}
+        document.body.removeChild(ta);
+    }
+    
+    function cleanVal(val) {
+        if(!val) return "";
+        return val.replace(/^.*?(?=[<>\d\-])/, '').trim();
+    }
+
+    function vCopy(val) { 
+        const clean = cleanVal(val);
+        sysCopy(clean, "Kopiert: " + clean); 
+    }
+
+    // --- FARBEN ---
+    const C = {
+        purp: (t) => `\\textcolor{#bd93f9}{${t}}`, oran: (t) => `\\textcolor{#ffb86c}{${t}}`,
+        gree: (t) => `\\textcolor{#50fa7b}{${t}}`, cyan: (t) => `\\textcolor{#8be9fd}{${t}}`,
+        yell: (t) => `\\textcolor{#f1fa8c}{${t}}`, pink: (t) => `\\textcolor{#ff79c6}{${t}}`,
+        red:  (t) => `\\textcolor{#ff5555}{${t}}`
+    };
+
+    function getV(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+    
+    function vTab(e, id) {
+        document.querySelectorAll('.voltr-grid').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.voltr-tab-btn').forEach(x => x.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(e && e.currentTarget) {
+            e.currentTarget.classList.add('active');
+        } else {
+            const btn = document.querySelector(`.voltr-tab-btn[onclick*="'${id}'"]`);
+            if(btn) btn.classList.add('active');
+        }
+    }
+
+    // --- GLOBALER VERLAUF & TIMER ---
+    function loadHistory() {
+        const saved = localStorage.getItem('voltr_hist_global');
+        if(saved) {
+            const list = document.getElementById('global-hist');
+            if(list) list.innerHTML = saved;
+        }
+    }
+    
+    function clearGlobalHist() {
+        document.getElementById('global-hist').innerHTML = ''; 
+        localStorage.removeItem('voltr_hist_global'); 
+    }
+
+    let isAppInit = true; 
+    let historyTimer = null;
+
+    function queueHistory(tabId, tabName, txt, val) {
+        if(isAppInit) return; 
+        
+        clearTimeout(historyTimer);
+        
+        const clean = cleanVal(val);
+        if(!clean || clean === '--' || clean.includes('NaN') || clean.includes('Infinity')) {
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('timer-text').style.display = 'none';
+            return;
+        }
+
+        const tCont = document.getElementById('timer-container');
+        const tBar = document.getElementById('timer-bar');
+        const tText = document.getElementById('timer-text');
+        
+        tCont.style.display = 'block';
+        tText.style.display = 'block';
+        
+        // Timer Animation erzwingen (Browser Bug Fix)
+        tBar.style.transition = 'none';
+        tBar.style.width = '0%';
+        void tBar.offsetWidth; // Zwingt den Browser zum Render-Update!
+        tBar.style.transition = 'width 5s linear';
+        tBar.style.width = '100%';
+
+        historyTimer = setTimeout(() => {
+            tCont.style.display = 'none';
+            tText.style.display = 'none';
+            
+            const list = document.getElementById('global-hist');
+            if(list.firstChild && list.firstChild.dataset.val === val) return;
+            
+            const d = document.createElement('div'); d.className = 'history-item'; d.dataset.val = val;
+            d.innerHTML = `<div class="history-text"><small>${new Date().toLocaleTimeString()} - <b>${tabName}</b></small><br>${txt}<span>${val}</span></div><button class="btn-copy" onclick="vCopy('${val}')">Copy</button>`;
+            list.prepend(d); 
+            if(list.children.length > 25) list.lastChild.remove(); 
+            
+            localStorage.setItem('voltr_hist_global', list.innerHTML);
+        }, 5000); 
+    }
+
+    function renderMath(id, texStr) {
+        try { katex.render(texStr, document.getElementById(id), { displayMode: true, throwOnError: false }); } 
+        catch (e) { console.error("KaTeX Error: ", e); }
+    }
+
+    // --- BERECHNUNGSMODULE ---
+    function tglIz() {
+        const t = document.getElementById('iz-target').value;
+        document.getElementById('row-iz-a').style.display = (t === 'IZ') ? 'block' : 'none';
+        document.getElementById('row-iz-ib').style.display = (t === 'A') ? 'block' : 'none';
+        
+        let leg = '';
+        if(t === 'IZ') {
+            leg = `<div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">Iz</span>Zulässige Belastbarkeit (A)</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Ir</span>Tabellen-Referenzstrom (A)</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">f1</span>Temp.-Korrekturfaktor</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">f2</span>Häufungs-Faktor</div>`;
+        } else {
+            leg = `<div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Ir</span>Geforderter Tabellenstrom (A)</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Ib</span>Betriebsstrom (A)</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">f1</span>Temp.-Korrekturfaktor</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#ffb86c;">f2</span>Häufungs-Faktor</div>
+                   <div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">A</span>Mindest-Querschnitt</div>`;
+        }
+        document.getElementById('iz-legende').innerHTML = leg;
+    }
+
+    function runIz(save = true) {
+        const irTable = {
+          "A1-2": {1.5:14.5, 2.5:19.5, 4:26, 6:34, 10:46, 16:61, 25:80, 35:99, 50:119},
+          "A1-3": {1.5:13.5, 2.5:18, 4:24, 6:31, 10:42, 16:56, 25:73, 35:89, 50:108},
+          "B1-2": {1.5:17.5, 2.5:24, 4:32, 6:41, 10:57, 16:76, 25:101, 35:125, 50:151},
+          "B1-3": {1.5:15.5, 2.5:21, 4:28, 6:36, 10:50, 16:68, 25:89, 35:110, 50:134},
+          "C-2":  {1.5:19.5, 2.5:27, 4:36, 6:46, 10:63, 16:85, 25:112, 35:138, 50:168},
+          "C-3":  {1.5:17.5, 2.5:24, 4:32, 6:41, 10:57, 16:76, 25:96, 35:119, 50:144},
+          "E-2":  {1.5:22, 2.5:30, 4:40, 6:51, 10:70, 16:94, 25:119, 35:148, 50:180},
+          "E-3":  {1.5:18.5, 2.5:25, 4:34, 6:43, 10:60, 16:80, 25:101, 35:126, 50:153}
+        };
+
+        const t = document.getElementById('iz-target').value;
+        const meth = document.getElementById('iz-meth').value;
+        const cores = document.getElementById('iz-cores').value;
+        const f1 = getV('iz-f1'), f2 = getV('iz-f2');
+        const key = meth + "-" + cores;
+        const table = irTable[key];
+
+        let base, live, res, txt;
+
+        if (t === 'IZ') {
+            const a = document.getElementById('iz-a').value;
+            const ir = table[a];
+            base = `${C.purp('I_Z')} = ${C.cyan('I_r')} \\cdot ${C.pink('f_1')} \\cdot ${C.oran('f_2')}`;
+            if(save) {
+                res = ir * f1 * f2;
+                live = `${C.purp('I_Z')} = ${C.cyan(ir+'\\text{A}')} \\cdot ${C.pink(f1)} \\cdot ${C.oran(f2)} = ${C.purp(res.toFixed(1)+'\\text{A}')}`;
+                document.getElementById('iz-res').innerText = "Iz = " + res.toFixed(1) + " A";
+                txt = `A=${a}mm² | ${meth} | f1,f2=${f1},${f2}`;
+            }
+        } else {
+            const ib = getV('iz-ib');
+            const ir_req = ib / (f1 * f2);
+            let foundA = null;
+            for (let sq of [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50]) {
+                if (table[sq] >= ir_req) { foundA = sq; break; }
+            }
+            base = `${C.cyan('I_{r, req}')} = \\frac{${C.red('I_B')}}{${C.pink('f_1')} \\cdot ${C.oran('f_2')}} \\implies ${C.gree('A')}`;
+            if(save) {
+                if (foundA === null) {
+                    res = "> 50";
+                    live = `${C.cyan('I_{r, req}')} = \\frac{${C.red(ib+'\\text{A}')}}{${C.pink(f1)} \\cdot ${C.oran(f2)}} = ${C.cyan(ir_req.toFixed(1)+'\\text{A}')} \\implies ${C.gree('>50\\text{mm}^2')}`;
+                    document.getElementById('iz-res').innerText = "A > 50 mm²";
+                } else {
+                    res = foundA;
+                    live = `${C.cyan('I_{r, req}')} = \\frac{${C.red(ib+'\\text{A}')}}{${C.pink(f1)} \\cdot ${C.oran(f2)}} = ${C.cyan(ir_req.toFixed(1)+'\\text{A}')} \\implies ${C.gree(foundA+'\\text{mm}^2')}`;
+                    document.getElementById('iz-res').innerText = "A = " + res + " mm²";
+                }
+                txt = `Ib=${ib}A | ${meth} | f1,f2=${f1},${f2}`;
+            }
+        }
+        renderMath('iz-f-base', base); 
+        if(save) { renderMath('iz-f-live', live); queueHistory('iz', 'Verlegeart (Iz)', txt, document.getElementById('iz-res').innerText); } 
+        else { document.getElementById('iz-f-live').innerHTML = ''; document.getElementById('iz-res').innerText = '--'; }
+    }
+    
+    function tglQ() {
+        const t = document.getElementById('q-target').value;
+        document.getElementById('row-q-a').style.display = (t === 'A') ? 'none' : 'block';
+        document.getElementById('row-q-l').style.display = (t === 'L') ? 'none' : 'block';
+        document.getElementById('row-q-i').style.display = (t === 'I') ? 'none' : 'block';
+    }
+    function runQ(save = true) {
+        const t = document.getElementById('q-target').value, y = getV('q-mat'), f = getV('q-netz');
+        const u = getV('q-u'), cos = getV('q-cos'), l = getV('q-l'), i = getV('q-i'), a = getV('q-a');
+        if(!u || !y) return; 
+        const ua = u * 0.03, fs = (f > 1.8) ? "2" : "\\sqrt{3}";
+        let base, live, res, txt;
+        
+        if(t === 'A') {
+            base = `${C.purp('A')} = \\frac{${C.oran(fs)} \\cdot ${C.gree('L')} \\cdot ${C.cyan('I')} \\cdot ${C.yell('\\cos \\varphi')}}{${C.pink('\\gamma')} \\cdot ${C.red('U_a')}}`;
+            if(save) {
+                res = (f * l * i * cos) / (y * ua);
+                live = `${C.purp('A')} = \\frac{${C.oran(fs)} \\cdot ${C.gree(l+'\\text{m}')} \\cdot ${C.cyan(i+'\\text{A}')} \\cdot ${C.yell(cos)}}{${C.pink(y)} \\cdot ${C.red(ua.toFixed(1)+'\\text{V}')}} = ${C.purp(res.toFixed(3)+'\\text{mm}^2')}`;
+                document.getElementById('q-res').innerText = "A = " + res.toFixed(3) + " mm²"; txt = `L=${l}m | I=${i}A`;
+            }
+        } else if(t === 'L') {
+            base = `${C.gree('L')} = \\frac{${C.purp('A')} \\cdot ${C.pink('\\gamma')} \\cdot ${C.red('U_a')}}{${C.oran(fs)} \\cdot ${C.cyan('I')} \\cdot ${C.yell('\\cos \\varphi')}}`;
+            if(save) {
+                res = (a * y * ua) / (f * i * cos);
+                live = `${C.gree('L')} = \\frac{${C.purp(a+'\\text{mm}^2')} \\cdot ${C.pink(y)} \\cdot ${C.red(ua.toFixed(1)+'\\text{V}')}}{${C.oran(fs)} \\cdot ${C.cyan(i+'\\text{A}')} \\cdot ${C.yell(cos)}} = ${C.gree(res.toFixed(1)+'\\text{m}')}`;
+                document.getElementById('q-res').innerText = "L = " + res.toFixed(1) + " m"; txt = `A=${a}mm² | I=${i}A`;
+            }
+        } else {
+            base = `${C.cyan('I')} = \\frac{${C.purp('A')} \\cdot ${C.pink('\\gamma')} \\cdot ${C.red('U_a')}}{${C.oran(fs)} \\cdot ${C.gree('L')} \\cdot ${C.yell('\\cos \\varphi')}}`;
+            if(save) {
+                res = (a * y * ua) / (f * l * cos);
+                live = `${C.cyan('I')} = \\frac{${C.purp(a+'\\text{mm}^2')} \\cdot ${C.pink(y)} \\cdot ${C.red(ua.toFixed(1)+'\\text{V}')}}{${C.oran(fs)} \\cdot ${C.gree(l+'\\text{m}')} \\cdot ${C.yell(cos)}} = ${C.cyan(res.toFixed(2)+'\\text{A}')}`;
+                document.getElementById('q-res').innerText = "I = " + res.toFixed(2) + " A"; txt = `A=${a}mm² | L=${l}m`;
+            }
+        }
+        
+        renderMath('q-f-base', base); 
+        if(save) { renderMath('q-f-live', live); queueHistory('q', 'Querschnitt', txt, document.getElementById('q-res').innerText); } 
+        else { document.getElementById('q-f-live').innerHTML = ''; document.getElementById('q-res').innerText = '--'; }
+    }
+
+    function tglP() {
+        const t = document.getElementById('p-target').value;
+        document.getElementById('row-p-p').style.display = (t === 'P') ? 'none' : 'block';
+        document.getElementById('row-p-i').style.display = (t === 'I') ? 'none' : 'block';
+        document.getElementById('row-p-u').style.display = (t === 'U') ? 'none' : 'block';
+    }
+    function runP(save = true) {
+        const t = document.getElementById('p-target').value, f = getV('p-netz');
+        const u = getV('p-u'), i = getV('p-i'), p = getV('p-p');
+        if(!f) return;
+        const fs = (f > 1.5) ? "\\sqrt{3}" : ""; const fsn = fs ? " \\cdot " + C.oran(fs) : "";
+        let base, live, res, txt;
+        
+        if(t === 'P') {
+            base = `${C.purp('P')} = ${C.red('U')} \\cdot ${C.cyan('I')}${fsn}`;
+            if(save) {
+                res = u * i * f;
+                live = `${C.purp('P')} = ${C.red(u+'\\text{V}')} \\cdot ${C.cyan(i+'\\text{A}')}${fsn} = ${C.purp(res.toFixed(1)+'\\text{W}')}`;
+                document.getElementById('p-res').innerText = "P = " + res.toFixed(1) + " W"; txt = `U=${u}V | I=${i}A`;
+            }
+        } else if(t === 'I') {
+            base = `${C.cyan('I')} = \\frac{${C.purp('P')}}{${C.red('U')}${fsn}}`;
+            if(save) {
+                res = p / (u * f);
+                live = `${C.cyan('I')} = \\frac{${C.purp(p+'\\text{W}')}}{${C.red(u+'\\text{V}')}${fsn}} = ${C.cyan(res.toFixed(2)+'\\text{A}')}`;
+                document.getElementById('p-res').innerText = "I = " + res.toFixed(2) + " A"; txt = `P=${p}W | U=${u}V`;
+            }
+        } else {
+            base = `${C.red('U')} = \\frac{${C.purp('P')}}{${C.cyan('I')}${fsn}}`;
+            if(save) {
+                res = p / (i * f);
+                live = `${C.red('U')} = \\frac{${C.purp(p+'\\text{W}')}}{${C.cyan(i+'\\text{A}')}${fsn}} = ${C.red(res.toFixed(1)+'\\text{V}')}`;
+                document.getElementById('p-res').innerText = "U = " + res.toFixed(1) + " V"; txt = `P=${p}W | I=${i}A`;
+            }
+        }
+        
+        renderMath('p-f-base', base); 
+        if(save) { renderMath('p-f-live', live); queueHistory('p', 'Leistung', txt, document.getElementById('p-res').innerText); } 
+        else { document.getElementById('p-f-live').innerHTML = ''; document.getElementById('p-res').innerText = '--'; }
+    }
+
+    function tglU() {
+        const m = document.getElementById('u-meth').value, tObj = document.getElementById('u-target');
+        if (m === 'exact' && tObj.value === 'A') { tObj.value = 'DU'; }
+        document.getElementById('opt-u-a').disabled = (m === 'exact');
+        const t = tObj.value;
+        document.getElementById('row-u-mat').style.display = (m === 'simp') ? 'block' : 'none';
+        document.getElementById('row-u-a-input').style.display = (m === 'simp' && t !== 'A') ? 'block' : 'none';
+        document.getElementById('row-u-r').style.display = (m === 'exact') ? 'block' : 'none';
+        document.getElementById('row-u-x').style.display = (m === 'exact') ? 'block' : 'none';
+        document.getElementById('row-u-cos').style.display = (m === 'exact') ? 'block' : 'none';
+        document.getElementById('row-u-du').style.display = (t === 'DU') ? 'none' : 'block';
+        document.getElementById('row-u-l').style.display = (t === 'L') ? 'none' : 'block';
+
+        const legSimp = `<div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">ΔU</span>Absoluter Spannungsfall (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">ρ</span>Spez. Widerstand (Ω·mm²/m)</div><div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">ℓ</span>Einfache Leitungslänge (m)</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Stromstärke (A)</div><div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">A</span>Leiterquerschnitt (mm²)</div>`;
+        const legExact = `<div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">ΔU</span>Absoluter Spannungsfall (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Stromstärke (A)</div><div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">L</span>Leitungslänge (km)</div><div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">R'</span>Wirkwiderstandsbelag (Ω/km)</div><div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">X'</span>Reaktanzbelag (Ω/km)</div>`;
+        document.getElementById('u-legende').innerHTML = (m === 'simp') ? legSimp : legExact;
+    }
+    function runU(save = true) {
+        const m = document.getElementById('u-meth').value, t = document.getElementById('u-target').value;
+        const i = getV('u-i'), l = getV('u-l'), du_in = getV('u-du');
+        let base, live, res, txt;
+
+        if(m === 'simp') {
+            const rho = getV('u-mat'), a = getV('u-a');
+            if(t === 'DU') {
+                base = `${C.red('\\Delta U')} = \\frac{${C.pink('\\rho')} \\cdot ${C.gree('\\ell')} \\cdot 2 \\cdot ${C.cyan('I')}}{${C.purp('A')}}`;
+                if(save) {
+                    res = (rho * l * 2 * i) / a;
+                    live = `${C.red('\\Delta U')} = \\frac{${C.pink(rho)} \\cdot ${C.gree(l+'\\text{m}')} \\cdot 2 \\cdot ${C.cyan(i+'\\text{A}')}}{${C.purp(a+'\\text{mm}^2')}} = ${C.red(res.toFixed(3)+'\\text{V}')}`;
+                    document.getElementById('u-res').innerText = "ΔU = " + res.toFixed(3) + " V"; txt = `L=${l}m | A=${a}mm²`;
+                }
+            } else if(t === 'L') {
+                base = `${C.gree('\\ell')} = \\frac{${C.red('\\Delta U')} \\cdot ${C.purp('A')}}{${C.pink('\\rho')} \\cdot 2 \\cdot ${C.cyan('I')}}`;
+                if(save) {
+                    res = (du_in * a) / (rho * 2 * i);
+                    live = `${C.gree('\\ell')} = \\frac{${C.red(du_in+'\\text{V}')} \\cdot ${C.purp(a+'\\text{mm}^2')}}{${C.pink(rho)} \\cdot 2 \\cdot ${C.cyan(i+'\\text{A}')}} = ${C.gree(res.toFixed(1)+'\\text{m}')}`;
+                    document.getElementById('u-res').innerText = "L = " + res.toFixed(1) + " m"; txt = `ΔU=${du_in}V | A=${a}mm²`;
+                }
+            } else {
+                base = `${C.purp('A')} = \\frac{${C.pink('\\rho')} \\cdot ${C.gree('\\ell')} \\cdot 2 \\cdot ${C.cyan('I')}}{${C.red('\\Delta U')}}`;
+                if(save) {
+                    res = (rho * l * 2 * i) / du_in;
+                    live = `${C.purp('A')} = \\frac{${C.pink(rho)} \\cdot ${C.gree(l+'\\text{m}')} \\cdot 2 \\cdot ${C.cyan(i+'\\text{A}')}}{${C.red(du_in+'\\text{V}')}} = ${C.purp(res.toFixed(3)+'\\text{mm}^2')}`;
+                    document.getElementById('u-res').innerText = "A = " + res.toFixed(3) + " mm²"; txt = `ΔU=${du_in}V | L=${l}m`;
+                }
+            }
+        } else {
+            const r = getV('u-r'), x = getV('u-x'), cos = getV('u-cos');
+            const sin = Math.sqrt(1 - Math.pow(cos, 2)), term = (r * cos) + (x * sin);
+            if(t === 'DU') {
+                base = `${C.red('\\Delta U')} = \\sqrt{3} \\cdot ${C.cyan('I')} \\cdot ${C.gree('L')} \\cdot (${C.pink("R'")} \\cdot \\cos \\varphi + ${C.purp("X'")} \\cdot \\sin \\varphi)`;
+                if(save) {
+                    res = 1.732 * i * (l/1000) * term;
+                    live = `${C.red('\\Delta U')} = \\sqrt{3} \\cdot ${C.cyan(i+'\\text{A}')} \\cdot ${C.gree((l/1000)+'\\text{km}')} \\cdot (${C.pink(r)} \\cdot ${cos} + ${C.purp(x)} \\cdot ${sin.toFixed(2)}) = ${C.red(res.toFixed(2)+'\\text{V}')}`;
+                    document.getElementById('u-res').innerText = "ΔU = " + res.toFixed(2) + " V"; txt = `L=${l}m | R'=${r}`;
+                }
+            } else {
+                base = `${C.gree('L')} = \\frac{${C.red('\\Delta U')}}{\\sqrt{3} \\cdot ${C.cyan('I')} \\cdot (${C.pink("R'")} \\cdot \\cos \\varphi + ${C.purp("X'")} \\cdot \\sin \\varphi)}`;
+                if(save) {
+                    res = (du_in / (1.732 * i * term)) * 1000; 
+                    live = `${C.gree('L')} = \\frac{${C.red(du_in+'\\text{V}')}}{\\sqrt{3} \\cdot ${C.cyan(i+'\\text{A}')} \\cdot (${C.pink(r)} \\cdot ${cos} + ${C.purp(x)} \\cdot ${sin.toFixed(2)})} = ${C.gree((res/1000).toFixed(3)+'\\text{km}')}`;
+                    document.getElementById('u-res').innerText = "L = " + res.toFixed(1) + " m"; txt = `ΔU=${du_in}V | R'=${r}`;
+                }
+            }
+        }
+        
+        renderMath('u-f-base', base); 
+        if(save) { renderMath('u-f-live', live); queueHistory('u', 'Spannungsfall', txt, document.getElementById('u-res').innerText); } 
+        else { document.getElementById('u-f-live').innerHTML = ''; document.getElementById('u-res').innerText = '--'; }
+    }
+
+    function tglIk() {
+        const t = document.getElementById('ik-target').value;
+        document.getElementById('row-ik-zs').style.display = (t === 'ZS') ? 'none' : 'block';
+        document.getElementById('row-ik-ik').style.display = (t === 'IK') ? 'none' : 'block';
+    }
+    function runIk(save = true) {
+        const t = document.getElementById('ik-target').value, u = getV('ik-u'), cf = getV('ik-c');
+        const zs = getV('ik-zs'), ik_in = getV('ik-ik');
+        let base, live, res, txt;
+        
+        if(t === 'IK') {
+            base = `${C.cyan('I_k')} = \\frac{${C.red('U')} \\cdot ${C.oran('c')}}{${C.gree('Z_s')}}`;
+            if(save) {
+                res = (u * cf) / zs;
+                live = `${C.cyan('I_k')} = \\frac{${C.red(u+'\\text{V}')} \\cdot ${C.oran(cf.toFixed(2))}}{${C.gree(zs+'\\Omega')}} = ${C.cyan(res.toFixed(1)+'\\text{A}')}`;
+                document.getElementById('ik-res').innerText = "Ik = " + res.toFixed(1) + " A"; txt = `Zs=${zs}Ω`;
+            }
+        } else {
+            base = `${C.gree('Z_s')} = \\frac{${C.red('U')} \\cdot ${C.oran('c')}}{${C.cyan('I_k')}}`;
+            if(save) {
+                res = (u * cf) / ik_in;
+                live = `${C.gree('Z_s')} = \\frac{${C.red(u+'\\text{V}')} \\cdot ${C.oran(cf.toFixed(2))}}{${C.cyan(ik_in+'\\text{A}')}} = ${C.gree(res.toFixed(3)+'\\Omega')}`;
+                document.getElementById('ik-res').innerText = "Zs = " + res.toFixed(3) + " Ω"; txt = `Ik=${ik_in}A`;
+            }
+        }
+        
+        renderMath('ik-f-base', base); 
+        if(save) { renderMath('ik-f-live', live); queueHistory('ik', 'Kurzschluss (Ik)', txt, document.getElementById('ik-res').innerText); } 
+        else { document.getElementById('ik-f-live').innerHTML = ''; document.getElementById('ik-res').innerText = '--'; }
+    }
+
+    function tglUbl() {
+        const t = document.getElementById('ubl-target').value;
+        document.getElementById('row-ubl-i2').style.display = (t === 'I2') ? 'none' : 'block';
+        document.getElementById('row-ubl-iz').style.display = (t === 'IZ') ? 'none' : 'block';
+    }
+    function runUbl(save = true) {
+        const t = document.getElementById('ubl-target').value;
+        const iz = getV('ubl-iz'), i2 = getV('ubl-i2'), k = getV('ubl-k');
+        let base, live, res, txt;
+        const baseCond = `${C.cyan('I_B')} \\le ${C.gree('I_n')} \\le ${C.purp('I_Z')}`;
+        
+        if(t === 'I2') {
+            base = `${baseCond} \\quad | \\quad ${C.red('I_2')} \\le ${C.oran('k')} \\cdot ${C.purp('I_Z')}`;
+            if(save) {
+                res = k * iz;
+                live = `${C.red('I_2')} = ${C.oran(k)} \\cdot ${C.purp(iz+'\\text{A}')} = ${C.red(res.toFixed(2)+'\\text{A}')}`;
+                document.getElementById('ubl-res').innerText = "I₂ max = " + res.toFixed(2) + " A"; txt = `Iz=${iz}A`;
+            }
+        } else {
+            base = `${baseCond} \\quad | \\quad ${C.purp('I_Z')} \\ge \\frac{${C.red('I_2')}}{${C.oran('k')}}`;
+            if(save) {
+                res = i2 / k;
+                live = `${C.purp('I_Z')} = \\frac{${C.red(i2+'\\text{A}')}}{${C.oran(k)}} = ${C.purp(res.toFixed(2)+'\\text{A}')}`;
+                document.getElementById('ubl-res').innerText = "Iz min = " + res.toFixed(2) + " A"; txt = `I₂=${i2}A`;
+            }
+        }
+        
+        renderMath('ubl-f-base', base); 
+        if(save) { renderMath('ubl-f-live', live); queueHistory('ubl', 'Überlastschutz', txt, document.getElementById('ubl-res').innerText); } 
+        else { document.getElementById('ubl-f-live').innerHTML = ''; document.getElementById('ubl-res').innerText = '--'; }
+    }
+
+    function tglAbs() {
+        const t = document.getElementById('abs-target').value;
+        document.getElementById('row-abs-zs').style.display = (t === 'ZS') ? 'none' : 'block';
+        document.getElementById('row-abs-ia').style.display = (t === 'IA') ? 'none' : 'block';
+    }
+    function runAbs(save = true) {
+        const t = document.getElementById('abs-target').value;
+        const u0 = getV('abs-u0'), zs = getV('abs-zs'), ia = getV('abs-ia');
+        let base, live, res, txt;
+        
+        if(t === 'ZS') {
+            base = `${C.gree('Z_s')} \\le \\frac{${C.cyan('U_0')}}{${C.red('I_a')}}`;
+            if(save) {
+                res = u0 / ia;
+                live = `${C.gree('Z_s')} = \\frac{${C.cyan(u0+'\\text{V}')}}{${C.red(ia+'\\text{A}')}} = ${C.gree(res.toFixed(2)+'\\Omega')}`;
+                document.getElementById('abs-res').innerText = "Zs max = " + res.toFixed(2) + " Ω"; txt = `U₀=${u0}V | Ia=${ia}A`;
+            }
+        } else {
+            base = `${C.red('I_a')} = \\frac{${C.cyan('U_0')}}{${C.gree('Z_s')}}`;
+            if(save) {
+                res = u0 / zs;
+                live = `${C.red('I_a')} = \\frac{${C.cyan(u0+'\\text{V}')}}{${C.gree(zs+'\\Omega')}} = ${C.red(res.toFixed(1)+'\\text{A}')}`;
+                document.getElementById('abs-res').innerText = "Ia = " + res.toFixed(1) + " A"; txt = `U₀=${u0}V | Zs=${zs}Ω`;
+            }
+        }
+        
+        renderMath('abs-f-base', base); 
+        if(save) { renderMath('abs-f-live', live); queueHistory('abs', 'Abschaltung', txt, document.getElementById('abs-res').innerText); } 
+        else { document.getElementById('abs-f-live').innerHTML = ''; document.getElementById('abs-res').innerText = '--'; }
+    }
+
+    function tglIso() {
+        const t = document.getElementById('iso-target').value;
+        document.getElementById('row-iso-u').style.display = (t === 'RISO') ? 'block' : 'none';
+        document.getElementById('row-iso-ileck').style.display = (t === 'RISO') ? 'block' : 'none';
+        document.getElementById('row-iso-um').style.display = (t === 'RPE') ? 'block' : 'none';
+        document.getElementById('row-iso-im').style.display = (t === 'RPE') ? 'block' : 'none';
+
+        const legRiso = `<div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">Riso</span>Isolationswiderstand (MΩ)</div><div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Uprüf</span>Prüfspannung (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Ileck</span>Leckstrom (mA)</div>`;
+        const legRpe = `<div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">Rpe</span>Schutzleiterwiderstand (Ω)</div><div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">U</span>Spannungsabfall (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">I</span>Messstrom (A)</div>`;
+        document.getElementById('iso-legende').innerHTML = (t === 'RISO') ? legRiso : legRpe;
+    }
+    function runIso(save = true) {
+        const t = document.getElementById('iso-target').value;
+        let base, live, res, txt;
+        
+        if (t === 'RISO') {
+            base = `${C.pink('R_{iso}')} = \\frac{${C.red('U_{Pr\\ddot{u}f}')}}{${C.cyan('I_{leck}')}}`;
+            if(save) {
+                const u = getV('iso-u'), ileck_ma = getV('iso-ileck'), i_a = ileck_ma / 1000;
+                res = (u / i_a) / 1000000;
+                live = `${C.pink('R_{iso}')} = \\frac{${C.red(u+'\\text{V}')}}{${C.cyan(i_a.toFixed(5)+'\\text{A}')}} = ${C.pink(res.toFixed(2)+'\\text{M}\\Omega')}`;
+                document.getElementById('iso-res').innerText = "Riso = " + res.toFixed(2) + " MΩ"; txt = `Uprüf=${u}V | Ileck=${ileck_ma}mA`;
+            }
+        } else {
+            base = `${C.pink('R_{PE}')} = \\frac{${C.red('U')}}{${C.cyan('I')}}`;
+            if(save) {
+                const u = getV('iso-um'), i = getV('iso-im');
+                res = u / i;
+                live = `${C.pink('R_{PE}')} = \\frac{${C.red(u+'\\text{V}')}}{${C.cyan(i+'\\text{A}')}} = ${C.pink(res.toFixed(3)+'\\Omega')}`;
+                document.getElementById('iso-res').innerText = "Rpe = " + res.toFixed(3) + " Ω"; txt = `U=${u}V | I=${i}A`;
+            }
+        }
+        
+        renderMath('iso-f-base', base); 
+        if(save) { renderMath('iso-f-live', live); queueHistory('iso', 'NIN-Messungen', txt, document.getElementById('iso-res').innerText); } 
+        else { document.getElementById('iso-f-live').innerHTML = ''; document.getElementById('iso-res').innerText = '--'; }
+    }
+
+    function tglCos() {
+        const t = document.getElementById('cos-target').value;
+        document.getElementById('row-cos-qc').style.display = (t === 'QC') ? 'none' : 'block';
+        document.getElementById('row-cos-p').style.display = (t === 'P') ? 'none' : 'block';
+    }
+    function runCos(save = true) {
+        const t = document.getElementById('cos-target').value;
+        const p = getV('cos-p'), qc_in = getV('cos-qc'), p1 = getV('cos-phi1'), p2 = getV('cos-phi2');
+        const tan1 = Math.tan(Math.acos(p1)), tan2 = Math.tan(Math.acos(p2)), tf = tan1 - tan2;
+        let base, live, res, txt;
+        
+        if(t === 'QC') {
+            base = `${C.purp('Q_c')} = ${C.gree('P')} \\cdot (${C.cyan('\\tan \\varphi_1')} - ${C.oran('\\tan \\varphi_2')})`;
+            if(save) {
+                res = p * tf;
+                live = `${C.purp('Q_c')} = ${C.gree(p+'\\text{kW}')} \\cdot (${C.cyan(tan1.toFixed(2))} - ${C.oran(tan2.toFixed(2))}) = ${C.purp(res.toFixed(2)+'\\text{kvar}')}`;
+                document.getElementById('cos-res').innerText = "Qc = " + res.toFixed(2) + " kvar"; txt = `P=${p}kW`;
+            }
+        } else {
+            base = `${C.gree('P')} = \\frac{${C.purp('Q_c')}}{(${C.cyan('\\tan \\varphi_1')} - ${C.oran('\\tan \\varphi_2')})}`;
+            if(save) {
+                res = qc_in / tf;
+                live = `${C.gree('P')} = \\frac{${C.purp(qc_in+'\\text{kvar}')}}{(${C.cyan(tan1.toFixed(2))} - ${C.oran(tan2.toFixed(2))})} = ${C.gree(res.toFixed(2)+'\\text{kW}')}`;
+                document.getElementById('cos-res').innerText = "P = " + res.toFixed(2) + " kW"; txt = `Qc=${qc_in}kvar`;
+            }
+        }
+        
+        renderMath('cos-f-base', base); 
+        if(save) { renderMath('cos-f-live', live); queueHistory('cos', 'Kompensation', txt, document.getElementById('cos-res').innerText); } 
+        else { document.getElementById('cos-f-live').innerHTML = ''; document.getElementById('cos-res').innerText = '--'; }
+    }
+
+    function tglCap() {
+        const t = document.getElementById('cap-target').value;
+        document.getElementById('row-cap-c').style.display = (t === 'C') ? 'none' : 'block';
+        document.getElementById('row-cap-qc').style.display = (t === 'QC') ? 'none' : 'block';
+    }
+    function runCap(save = true) {
+        const t = document.getElementById('cap-target').value, k = getV('cap-k');
+        const f = getV('cap-f'), u = getV('cap-u'), qc = getV('cap-qc'), c_in = getV('cap-c');
+        let base, live, res, txt; const w = 2 * Math.PI * f;
+        
+        if (t === 'C') {
+            base = `${C.purp('C')} = \\frac{${C.red('Q_c')}}{${C.oran('k')} \\cdot 2\\pi \\cdot ${C.gree('f')} \\cdot ${C.cyan('U')}^2}`;
+            if(save) {
+                res = ((qc * 1000) / (k * w * Math.pow(u, 2))) * 1e6; 
+                live = `${C.purp('C')} = \\frac{${C.red(qc+'\\text{kvar}')}}{${C.oran(k)} \\cdot 2\\pi \\cdot ${C.gree(f+'\\text{Hz}')} \\cdot ${C.cyan(u+'\\text{V}')}^2} = ${C.purp(res.toFixed(1)+'\\,\\mu\\text{F}')}`;
+                document.getElementById('cap-res').innerText = "C = " + res.toFixed(1) + " µF"; txt = `Qc=${qc}kvar | U=${u}V`;
+            }
+        } else {
+            base = `${C.red('Q_c')} = ${C.purp('C')} \\cdot ${C.oran('k')} \\cdot 2\\pi \\cdot ${C.gree('f')} \\cdot ${C.cyan('U')}^2`;
+            if(save) {
+                res = ((c_in * 1e-6) * k * w * Math.pow(u, 2)) / 1000; 
+                live = `${C.red('Q_c')} = ${C.purp(c_in+'\\,\\mu\\text{F}')} \\cdot ${C.oran(k)} \\cdot 2\\pi \\cdot ${C.gree(f+'\\text{Hz}')} \\cdot ${C.cyan(u+'\\text{V}')}^2 = ${C.red(res.toFixed(2)+'\\text{kvar}')}`;
+                document.getElementById('cap-res').innerText = "Qc = " + res.toFixed(2) + " kvar"; txt = `C=${c_in}µF | U=${u}V`;
+            }
+        }
+        
+        renderMath('cap-f-base', base); 
+        if(save) { renderMath('cap-f-live', live); queueHistory('cap', 'Kondensator (C)', txt, document.getElementById('cap-res').innerText); } 
+        else { document.getElementById('cap-f-live').innerHTML = ''; document.getElementById('cap-res').innerText = '--'; }
+    }
+
+    function tglMot() {
+        const t = document.getElementById('mot-target').value;
+        document.getElementById('row-mot-m').style.display = (t === 'M') ? 'none' : 'block';
+        document.getElementById('row-mot-p').style.display = (t === 'P') ? 'none' : 'block';
+        document.getElementById('row-mot-n').style.display = (t === 'N') ? 'none' : 'block';
+    }
+    function runMot(save = true) {
+        const t = document.getElementById('mot-target').value;
+        const p = getV('mot-p'), n = getV('mot-n'), m_in = getV('mot-m');
+        let base, live, res, txt;
+        
+        if(t === 'M') {
+            base = `${C.oran('M')} = \\frac{9550 \\cdot ${C.gree('P')}}{${C.cyan('n')}}`;
+            if(save) {
+                res = (9550 * p) / n;
+                live = `${C.oran('M')} = \\frac{9550 \\cdot ${C.gree(p+'\\text{kW}')}}{${C.cyan(n+'\\text{min}^{-1}')}} = ${C.oran(res.toFixed(2)+'\\text{Nm}')}`;
+                document.getElementById('mot-res').innerText = "M = " + res.toFixed(2) + " Nm"; txt = `P=${p}kW | n=${n}`;
+            }
+        } else if(t === 'P') {
+            base = `${C.gree('P')} = \\frac{${C.oran('M')} \\cdot ${C.cyan('n')}}{9550}`;
+            if(save) {
+                res = (m_in * n) / 9550;
+                live = `${C.gree('P')} = \\frac{${C.oran(m_in+'\\text{Nm}')} \\cdot ${C.cyan(n+'\\text{min}^{-1}')}}{9550} = ${C.gree(res.toFixed(2)+'\\text{kW}')}`;
+                document.getElementById('mot-res').innerText = "P = " + res.toFixed(2) + " kW"; txt = `M=${m_in}Nm | n=${n}`;
+            }
+        } else {
+            base = `${C.cyan('n')} = \\frac{9550 \\cdot ${C.gree('P')}}{${C.oran('M')}}`;
+            if(save) {
+                res = (9550 * p) / m_in;
+                live = `${C.cyan('n')} = \\frac{9550 \\cdot ${C.gree(p+'\\text{kW}')}}{${C.oran(m_in+'\\text{Nm}')}} = ${C.cyan(res.toFixed(0)+'\\text{min}^{-1}')}`;
+                document.getElementById('mot-res').innerText = "n = " + res.toFixed(0) + " min⁻¹"; txt = `M=${m_in}Nm | P=${p}kW`;
+            }
+        }
+        
+        renderMath('mot-f-base', base); 
+        if(save) { renderMath('mot-f-live', live); queueHistory('mot', 'Motor', txt, document.getElementById('mot-res').innerText); } 
+        else { document.getElementById('mot-f-live').innerHTML = ''; document.getElementById('mot-res').innerText = '--'; }
+    }
+
+    function tglSd() {
+        const t = document.getElementById('sd-target').value;
+        document.getElementById('row-sd-id').style.display = (t === 'ID') ? 'none' : 'block';
+        document.getElementById('row-sd-iph').style.display = (t === 'IPH') ? 'none' : 'block';
+    }
+    function runSd(save = true) {
+        const t = document.getElementById('sd-target').value;
+        const iph = getV('sd-iph'), id_in = getV('sd-id');
+        let base, live, res, txt;
+        
+        if(t === 'ID') {
+            base = `${C.red('I_{\\Delta}')} = ${C.cyan('I_{ph}')} \\cdot ${C.oran('\\sqrt{3}')}`;
+            if(save) {
+                res = iph * 1.732;
+                live = `${C.red('I_{\\Delta}')} = ${C.cyan(iph+'\\text{A}')} \\cdot ${C.oran('\\sqrt{3}')} = ${C.red(res.toFixed(1)+'\\text{A}')}`;
+                document.getElementById('sd-res').innerText = "IΔ = " + res.toFixed(1) + " A"; txt = `Iph=${iph}A`;
+            }
+        } else {
+            base = `${C.cyan('I_{ph}')} = \\frac{${C.red('I_{\\Delta}')}}{${C.oran('\\sqrt{3}')}}`;
+            if(save) {
+                res = id_in / 1.732;
+                live = `${C.cyan('I_{ph}')} = \\frac{${C.red(id_in+'\\text{A}')}}{${C.oran('\\sqrt{3}')}} = ${C.cyan(res.toFixed(1)+'\\text{A}')}`;
+                document.getElementById('sd-res').innerText = "Iph = " + res.toFixed(1) + " A"; txt = `IΔ=${id_in}A`;
+            }
+        }
+        
+        renderMath('sd-f-base', base); 
+        if(save) { renderMath('sd-f-live', live); queueHistory('sd', 'Stern-Dreieck', txt, document.getElementById('sd-res').innerText); } 
+        else { document.getElementById('sd-f-live').innerHTML = ''; document.getElementById('sd-res').innerText = '--'; }
+    }
+
+    function tglTrf() {
+        const t = document.getElementById('trf-target').value;
+        document.getElementById('row-trf-ik2').style.display = (t === 'IK2') ? 'none' : 'block';
+        document.getElementById('row-trf-sn').style.display = (t === 'SN') ? 'none' : 'block';
+        document.getElementById('row-trf-uk').style.display = (t === 'UK') ? 'none' : 'block';
+    }
+    function runTrf(save = true) {
+        const t = document.getElementById('trf-target').value;
+        const ik2_in = getV('trf-ik2'), sn = getV('trf-sn');
+        const u2n = getV('trf-u2n'), uk = getV('trf-uk');
+        let base, live, res, txt;
+        
+        if(t === 'IK2') {
+            base = `${C.red('I_{k2}')} = \\frac{${C.purp('S_N')}}{\\sqrt{3} \\cdot ${C.cyan('U_{2N}')} \\cdot ${C.gree('u_k')}} \\cdot 100`;
+            if(save) {
+                res = (sn / (1.732 * u2n * uk)) * 100;
+                live = `${C.red('I_{k2}')} = \\frac{${C.purp(sn+'\\text{VA}')}}{\\sqrt{3} \\cdot ${C.cyan(u2n+'\\text{V}')} \\cdot ${C.gree(uk)}} \\cdot 100 = ${C.red(res.toFixed(0)+'\\text{A}')}`;
+                document.getElementById('trf-res').innerText = "Ik2 = " + res.toFixed(0) + " A"; txt = `Sn=${sn}VA | uk=${uk}%`;
+            }
+        } else if(t === 'SN') {
+            base = `${C.purp('S_N')} = \\frac{${C.red('I_{k2}')} \\cdot \\sqrt{3} \\cdot ${C.cyan('U_{2N}')} \\cdot ${C.gree('u_k')}}{100}`;
+            if(save) {
+                res = (ik2_in * 1.732 * u2n * uk) / 100;
+                live = `${C.purp('S_N')} = \\frac{${C.red(ik2_in+'\\text{A}')} \\cdot \\sqrt{3} \\cdot ${C.cyan(u2n+'\\text{V}')} \\cdot ${C.gree(uk)}}{100} = ${C.purp(res.toFixed(0)+'\\text{VA}')}`;
+                document.getElementById('trf-res').innerText = "Sn = " + res.toFixed(0) + " VA"; txt = `Ik2=${ik2_in}A | uk=${uk}%`;
+            }
+        } else {
+            base = `${C.gree('u_k')} = \\frac{${C.purp('S_N')} \\cdot 100}{\\sqrt{3} \\cdot ${C.cyan('U_{2N}')} \\cdot ${C.red('I_{k2}')}}`;
+            if(save) {
+                res = (sn * 100) / (1.732 * u2n * ik2_in);
+                live = `${C.gree('u_k')} = \\frac{${C.purp(sn+'\\text{VA}')} \\cdot 100}{\\sqrt{3} \\cdot ${C.cyan(u2n+'\\text{V}')} \\cdot ${C.red(ik2_in+'\\text{A}')}} = ${C.gree(res.toFixed(2)+'\\%')}`;
+                document.getElementById('trf-res').innerText = "uk = " + res.toFixed(2) + " %"; txt = `Sn=${sn}VA | Ik2=${ik2_in}A`;
+            }
+        }
+        
+        renderMath('trf-f-base', base); 
+        if(save) { renderMath('trf-f-live', live); queueHistory('trf', 'Transformator', txt, document.getElementById('trf-res').innerText); } 
+        else { document.getElementById('trf-f-live').innerHTML = ''; document.getElementById('trf-res').innerText = '--'; }
+    }
+
+    function tglPv() {
+        const t = document.getElementById('pv-target').value;
+        document.getElementById('grp-pv-umax').style.display = (t === 'UMAX') ? 'block' : 'none';
+        document.getElementById('grp-pv-ustr').style.display = (t === 'USTR') ? 'block' : 'none';
+        document.getElementById('grp-pv-isc').style.display = (t === 'ISC') ? 'block' : 'none';
+        document.getElementById('grp-pv-pmpp').style.display = (t === 'PMPP') ? 'block' : 'none';
+
+        let leg = '';
+        if(t === 'UMAX') {
+            leg = `<div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Umax</span>Max. Leerlaufspannung (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Uoc</span>Leerlaufspannung STC (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#ff79c6;">TK</span>Temperaturkoeffizient (V/K)</div><div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">ΔT</span>Temperaturdiff. zu 25°C</div>`;
+        } else if(t === 'USTR') {
+            leg = `<div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Ustr</span>String-Spannung (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">n</span>Anzahl Module in Serie</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Umod</span>Spannung pro Modul (V)</div>`;
+        } else if(t === 'ISC') {
+            leg = `<div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Iges</span>Gesamter Kurzschlussstrom (A)</div><div class="legende-item"><span class="legende-symbol" style="color:#50fa7b;">m</span>Anzahl parallele Strings</div><div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">Istr</span>Kurzschlussstrom pro Strang (A)</div>`;
+        } else if(t === 'PMPP') {
+            leg = `<div class="legende-item"><span class="legende-symbol" style="color:#bd93f9;">Pmpp</span>Generatorleistung (W)</div><div class="legende-item"><span class="legende-symbol" style="color:#ff5555;">Umpp</span>Spannung im MPP (V)</div><div class="legende-item"><span class="legende-symbol" style="color:#8be9fd;">Impp</span>Strom im MPP (A)</div>`;
+        }
+        document.getElementById('pv-legende').innerHTML = leg;
+    }
+    function runPv(save = true) {
+        const t = document.getElementById('pv-target').value;
+        let base, live, res, txt;
+        
+        if(t === 'UMAX') {
+            base = `${C.red('U_{max}')} = ${C.cyan('U_{oc}')} + [${C.pink('TK')} \\cdot ${C.gree('\\Delta T')}]`;
+            if(save) {
+                const uoc = getV('pv-uoc'), tk = getV('pv-tk'), temp = getV('pv-t');
+                const dt = temp - 25; res = uoc + (tk * dt);
+                live = `${C.red('U_{max}')} = ${C.cyan(uoc+'\\text{V}')} + [${C.pink(tk+'\\text{V/K}')} \\cdot ${C.gree('('+dt+'\\text{K})')}] = ${C.red(res.toFixed(2)+'\\text{V}')}`;
+                document.getElementById('pv-res').innerText = "Umax = " + res.toFixed(2) + " V"; txt = `Uoc=${uoc}V | T=${temp}°C`;
+            }
+        } else if(t === 'USTR') {
+            base = `${C.red('U_{String}')} = ${C.gree('n')} \\cdot ${C.cyan('U_{Modul}')}`;
+            if(save) {
+                const n = getV('pv-n'), umod = getV('pv-umod');
+                res = n * umod;
+                live = `${C.red('U_{String}')} = ${C.gree(n)} \\cdot ${C.cyan(umod+'\\text{V}')} = ${C.red(res.toFixed(1)+'\\text{V}')}`;
+                document.getElementById('pv-res').innerText = "Ustr = " + res.toFixed(1) + " V"; txt = `n=${n} | Umod=${umod}V`;
+            }
+        } else if(t === 'ISC') {
+            base = `${C.cyan('I_{SC,ges}')} = ${C.gree('m')} \\cdot ${C.purp('I_{SC,Strang}')}`;
+            if(save) {
+                const m = getV('pv-m'), istr = getV('pv-istr');
+                res = m * istr;
+                live = `${C.cyan('I_{SC,ges}')} = ${C.gree(m)} \\cdot ${C.purp(istr+'\\text{A}')} = ${C.cyan(res.toFixed(2)+'\\text{A}')}`;
+                document.getElementById('pv-res').innerText = "Iges = " + res.toFixed(2) + " A"; txt = `m=${m} | Istr=${istr}A`;
+            }
+        } else if(t === 'PMPP') {
+            base = `${C.purp('P_{MPP}')} = ${C.red('U_{MPP}')} \\cdot ${C.cyan('I_{MPP}')}`;
+            if(save) {
+                const u = getV('pv-umpp'), i = getV('pv-impp');
+                res = u * i;
+                live = `${C.purp('P_{MPP}')} = ${C.red(u+'\\text{V}')} \\cdot ${C.cyan(i+'\\text{A}')} = ${C.purp(res.toFixed(1)+'\\text{W}')}`;
+                document.getElementById('pv-res').innerText = "Pmpp = " + res.toFixed(1) + " W"; txt = `U=${u}V | I=${i}A`;
+            }
+        }
+        
+        renderMath('pv-f-base', base); 
+        if(save) { renderMath('pv-f-live', live); queueHistory('pv', 'PV-Anlagen', txt, document.getElementById('pv-res').innerText); } 
+        else { document.getElementById('pv-f-live').innerHTML = ''; document.getElementById('pv-res').innerText = '--'; }
+    }
+
+    function tglUsv() {
+        const t = document.getElementById('usv-target').value;
+        document.getElementById('row-usv-c').style.display = (t === 'C') ? 'none' : 'block';
+        document.getElementById('row-usv-t').style.display = (t === 'T') ? 'none' : 'block';
+    }
+    function runUsv(save = true) {
+        const t = document.getElementById('usv-target').value;
+        const p = getV('usv-p'), time = getV('usv-t'), c_in = getV('usv-c');
+        const u = getV('usv-u'), eta = getV('usv-eta');
+        let base, live, res, txt;
+
+        if (t === 'C') {
+            base = `${C.purp('C')} = \\frac{${C.gree('P')} \\cdot ${C.cyan('t')}}{${C.red('U')} \\cdot ${C.oran('\\eta')}}`;
+            if(save) {
+                res = (p * time) / (u * eta);
+                live = `${C.purp('C')} = \\frac{${C.gree(p+'\\text{W}')} \\cdot ${C.cyan(time+'\\text{h}')}}{${C.red(u+'\\text{V}')} \\cdot ${C.oran(eta)}} = ${C.purp(res.toFixed(1)+'\\text{Ah}')}`;
+                document.getElementById('usv-res').innerText = "C = " + res.toFixed(1) + " Ah"; txt = `P=${p}W | t=${time}h`;
+            }
+        } else {
+            base = `${C.cyan('t')} = \\frac{${C.purp('C')} \\cdot ${C.red('U')} \\cdot ${C.oran('\\eta')}}{${C.gree('P')}}`;
+            if(save) {
+                res = (c_in * u * eta) / p;
+                live = `${C.cyan('t')} = \\frac{${C.purp(c_in+'\\text{Ah}')} \\cdot ${C.red(u+'\\text{V}')} \\cdot ${C.oran(eta)}}{${C.gree(p+'\\text{W}')}} = ${C.cyan(res.toFixed(2)+'\\text{h}')}`;
+                document.getElementById('usv-res').innerText = "t = " + res.toFixed(2) + " h"; txt = `C=${c_in}Ah | P=${p}W`;
+            }
+        }
+        
+        renderMath('usv-f-base', base); 
+        if(save) { renderMath('usv-f-live', live); queueHistory('usv', 'USV & Batterie', txt, document.getElementById('usv-res').innerText); } 
+        else { document.getElementById('usv-f-live').innerHTML = ''; document.getElementById('usv-res').innerText = '--'; }
+    }
+
+    function tglPvdc() {
+        const t = document.getElementById('pvdc-target').value;
+        document.getElementById('row-pvdc-du').style.display = (t === 'DU') ? 'none' : 'block';
+        document.getElementById('row-pvdc-a').style.display = (t === 'A') ? 'none' : 'block';
+    }
+    function runPvdc(save = true) {
+        const t = document.getElementById('pvdc-target').value;
+        const y = getV('pvdc-mat'), du_in = getV('pvdc-du'), l = getV('pvdc-l');
+        const i = getV('pvdc-i'), a_in = getV('pvdc-a');
+        let base, live, res, txt;
+
+        if (t === 'DU') {
+            base = `${C.red('\\Delta U')} = \\frac{2 \\cdot ${C.gree('L')} \\cdot ${C.cyan('I')}}{${C.pink('\\gamma')} \\cdot ${C.purp('A')}}`;
+            if(save) {
+                res = (2 * l * i) / (y * a_in);
+                live = `${C.red('\\Delta U')} = \\frac{2 \\cdot ${C.gree(l+'\\text{m}')} \\cdot ${C.cyan(i+'\\text{A}')}}{${C.pink(y)} \\cdot ${C.purp(a_in+'\\text{mm}^2')}} = ${C.red(res.toFixed(2)+'\\text{V}')}`;
+                document.getElementById('pvdc-res').innerText = "ΔU = " + res.toFixed(2) + " V"; txt = `L=${l}m | A=${a_in}mm²`;
+            }
+        } else {
+            base = `${C.purp('A')} = \\frac{2 \\cdot ${C.gree('L')} \\cdot ${C.cyan('I')}}{${C.pink('\\gamma')} \\cdot ${C.red('\\Delta U')}}`;
+            if(save) {
+                res = (2 * l * i) / (y * du_in);
+                live = `${C.purp('A')} = \\frac{2 \\cdot ${C.gree(l+'\\text{m}')} \\cdot ${C.cyan(i+'\\text{A}')}}{${C.pink(y)} \\cdot ${C.red(du_in+'\\text{V}')}} = ${C.purp(res.toFixed(2)+'\\text{mm}^2')}`;
+                document.getElementById('pvdc-res').innerText = "A = " + res.toFixed(2) + " mm²"; txt = `L=${l}m | ΔU=${du_in}V`;
+            }
+        }
+        
+        renderMath('pvdc-f-base', base); 
+        if(save) { renderMath('pvdc-f-live', live); queueHistory('pvdc', 'DC-Spannungsfall', txt, document.getElementById('pvdc-res').innerText); } 
+        else { document.getElementById('pvdc-f-live').innerHTML = ''; document.getElementById('pvdc-res').innerText = '--'; }
+    }
+
+    function tglEmob() {
+        const t = document.getElementById('emob-target').value;
+        document.getElementById('row-emob-p').style.display = (t === 'P') ? 'none' : 'block';
+        document.getElementById('row-emob-i').style.display = (t === 'I') ? 'none' : 'block';
+    }
+    function runEmob(save = true) {
+        const t = document.getElementById('emob-target').value, f = getV('emob-netz');
+        const u = getV('emob-u'), i = getV('emob-i'), p = getV('emob-p'), cos = getV('emob-cos');
+        const fs = (f > 1.5) ? "\\sqrt{3}" : ""; const fsn = fs ? " \\cdot " + C.oran(fs) : "";
+        let base, live, res, txt;
+        
+        if(t === 'P') {
+            base = `${C.purp('P')} = ${fs ? C.oran(fs) + " \\cdot " : ""}${C.red('U')} \\cdot ${C.cyan('I')} \\cdot ${C.yell('\\cos \\varphi')}`;
+            if(save) {
+                res = u * i * f * cos;
+                live = `${C.purp('P')} = ${fs ? C.oran(fs) + " \\cdot " : ""}${C.red(u+'\\text{V}')} \\cdot ${C.cyan(i+'\\text{A}')} \\cdot ${C.yell(cos)} = ${C.purp(res.toFixed(1)+'\\text{W}')}`;
+                document.getElementById('emob-res').innerText = "P = " + res.toFixed(1) + " W"; txt = `U=${u}V | I=${i}A`;
+            }
+        } else {
+            base = `${C.cyan('I')} = \\frac{${C.purp('P')}}{${fs ? C.oran(fs) + " \\cdot " : ""}${C.red('U')} \\cdot ${C.yell('\\cos \\varphi')}}`;
+            if(save) {
+                res = p / (u * f * cos);
+                live = `${C.cyan('I')} = \\frac{${C.purp(p+'\\text{W}')}}{${fs ? C.oran(fs) + " \\cdot " : ""}${C.red(u+'\\text{V}')} \\cdot ${C.yell(cos)}} = ${C.cyan(res.toFixed(2)+'\\text{A}')}`;
+                document.getElementById('emob-res').innerText = "I = " + res.toFixed(2) + " A"; txt = `P=${p}W | U=${u}V`;
+            }
+        }
+        
+        renderMath('emob-f-base', base); 
+        if(save) { renderMath('emob-f-live', live); queueHistory('emob', 'E-Mobilität', txt, document.getElementById('emob-res').innerText); } 
+        else { document.getElementById('emob-f-live').innerHTML = ''; document.getElementById('emob-res').innerText = '--'; }
+    }
+
+    function tglBel() {
+        const t = document.getElementById('bel-target').value;
+        document.getElementById('row-bel-n').style.display = (t === 'N') ? 'none' : 'block';
+        document.getElementById('row-bel-em').style.display = (t === 'EM') ? 'none' : 'block';
+        document.getElementById('row-bel-a').style.display = (t === 'A') ? 'none' : 'block';
+    }
+    function runBel(save = true) {
+        const t = document.getElementById('bel-target').value;
+        const n_in = getV('bel-n'), em = getV('bel-em'), a = getV('bel-a');
+        const phi = getV('bel-phi'), eta = getV('bel-eta'), wf = getV('bel-wf');
+        let base, live, res, txt;
+        
+        if(t === 'N') {
+            base = `${C.purp('n')} = \\frac{${C.red('E_m')} \\cdot ${C.gree('A')}}{${C.cyan('\\Phi_L')} \\cdot ${C.oran('\\eta_B')} \\cdot ${C.yell('WF')}}`;
+            if(save) {
+                res = (em * a) / (phi * eta * wf);
+                live = `${C.purp('n')} = \\frac{${C.red(em+'\\text{lx}')} \\cdot ${C.gree(a+'\\text{m}^2')}}{${C.cyan(phi+'\\text{lm}')} \\cdot ${C.oran(eta)} \\cdot ${C.yell(wf)}} = ${C.purp(res.toFixed(1)+'\\text{ Stk}')}`;
+                document.getElementById('bel-res').innerText = "n = " + Math.ceil(res) + " Leuchten"; txt = `Em=${em}lx | A=${a}m²`;
+            }
+        } else if(t === 'EM') {
+            base = `${C.red('E_m')} = \\frac{${C.purp('n')} \\cdot ${C.cyan('\\Phi_L')} \\cdot ${C.oran('\\eta_B')} \\cdot ${C.yell('WF')}}{${C.gree('A')}}`;
+            if(save) {
+                res = (n_in * phi * eta * wf) / a;
+                live = `${C.red('E_m')} = \\frac{${C.purp(n_in)} \\cdot ${C.cyan(phi+'\\text{lm}')} \\cdot ${C.oran(eta)} \\cdot ${C.yell(wf)}}{${C.gree(a+'\\text{m}^2')}} = ${C.red(res.toFixed(0)+'\\text{lx}')}`;
+                document.getElementById('bel-res').innerText = "Em = " + res.toFixed(0) + " lx"; txt = `n=${n_in} | A=${a}m²`;
+            }
+        } else {
+            base = `${C.gree('A')} = \\frac{${C.purp('n')} \\cdot ${C.cyan('\\Phi_L')} \\cdot ${C.oran('\\eta_B')} \\cdot ${C.yell('WF')}}{${C.red('E_m')}}`;
+            if(save) {
+                res = (n_in * phi * eta * wf) / em;
+                live = `${C.gree('A')} = \\frac{${C.purp(n_in)} \\cdot ${C.cyan(phi+'\\text{lm}')} \\cdot ${C.oran(eta)} \\cdot ${C.yell(wf)}}{${C.red(em+'\\text{lx}')}} = ${C.gree(res.toFixed(1)+'\\text{m}^2')}`;
+                document.getElementById('bel-res').innerText = "A = " + res.toFixed(1) + " m²"; txt = `n=${n_in} | Em=${em}lx`;
+            }
+        }
+        
+        renderMath('bel-f-base', base); 
+        if(save) { renderMath('bel-f-live', live); queueHistory('bel', 'Beleuchtung', txt, document.getElementById('bel-res').innerText); } 
+        else { document.getElementById('bel-f-live').innerHTML = ''; document.getElementById('bel-res').innerText = '--'; }
+    }
+
+    function tglThm() {
+        const t = document.getElementById('thm-target').value;
+        document.getElementById('row-thm-p').style.display = (t === 'P') ? 'none' : 'block';
+        document.getElementById('row-thm-t').style.display = (t === 'T') ? 'none' : 'block';
+        document.getElementById('row-thm-m').style.display = (t === 'M') ? 'none' : 'block';
+    }
+    function runThm(save = true) {
+        const t = document.getElementById('thm-target').value;
+        const p_in = getV('thm-p'), m = getV('thm-m'), c = 1.163, dt = getV('thm-dt');
+        const time = getV('thm-t'), eta = getV('thm-eta');
+        let base, live, res, txt;
+        
+        if(t === 'P') {
+            base = `${C.purp('P')} = \\frac{${C.cyan('m')} \\cdot ${C.pink('c')} \\cdot ${C.red('\\Delta \\vartheta')}}{${C.gree('t')} \\cdot ${C.oran('\\eta')}}`;
+            if(save) {
+                res = (m * c * dt) / (time * eta);
+                live = `${C.purp('P')} = \\frac{${C.cyan(m+'\\text{kg}')} \\cdot ${C.pink(c)} \\cdot ${C.red(dt+'\\text{K}')}}{${C.gree(time+'\\text{h}')} \\cdot ${C.oran(eta)}} = ${C.purp(res.toFixed(0)+'\\text{W}')}`;
+                document.getElementById('thm-res').innerText = "P = " + res.toFixed(0) + " W"; txt = `m=${m}kg | t=${time}h`;
+            }
+        } else if(t === 'T') {
+            base = `${C.gree('t')} = \\frac{${C.cyan('m')} \\cdot ${C.pink('c')} \\cdot ${C.red('\\Delta \\vartheta')}}{${C.purp('P')} \\cdot ${C.oran('\\eta')}}`;
+            if(save) {
+                res = (m * c * dt) / (p_in * eta);
+                live = `${C.gree('t')} = \\frac{${C.cyan(m+'\\text{kg}')} \\cdot ${C.pink(c)} \\cdot ${C.red(dt+'\\text{K}')}}{${C.purp(p_in+'\\text{W}')} \\cdot ${C.oran(eta)}} = ${C.gree(res.toFixed(2)+'\\text{h}')}`;
+                document.getElementById('thm-res').innerText = "t = " + res.toFixed(2) + " h"; txt = `m=${m}kg | P=${p_in}W`;
+            }
+        } else {
+            base = `${C.cyan('m')} = \\frac{${C.purp('P')} \\cdot ${C.gree('t')} \\cdot ${C.oran('\\eta')}}{${C.pink('c')} \\cdot ${C.red('\\Delta \\vartheta')}}`;
+            if(save) {
+                res = (p_in * time * eta) / (c * dt);
+                live = `${C.cyan('m')} = \\frac{${C.purp(p_in+'\\text{W}')} \\cdot ${C.gree(time+'\\text{h}')} \\cdot ${C.oran(eta)}}{${C.pink(c)} \\cdot ${C.red(dt+'\\text{K}')}} = ${C.cyan(res.toFixed(1)+'\\text{kg}')}`;
+                document.getElementById('thm-res').innerText = "m = " + res.toFixed(1) + " kg/L"; txt = `P=${p_in}W | t=${time}h`;
+            }
+        }
+        
+        renderMath('thm-f-base', base); 
+        if(save) { renderMath('thm-f-live', live); queueHistory('thm', 'Wärmetechnik', txt, document.getElementById('thm-res').innerText); } 
+        else { document.getElementById('thm-f-live').innerHTML = ''; document.getElementById('thm-res').innerText = '--'; }
+    }
+
+    function tglTrf() {
+        const t = document.getElementById('trf-target').value;
+        document.getElementById('row-trf-ik2').style.display = (t === 'IK2') ? 'none' : 'block';
+        document.getElementById('row-trf-sn').style.display = (t === 'SN') ? 'none' : 'block';
+        document.getElementById('row-trf-uk').style.display = (t === 'UK') ? 'none' : 'block';
+    }
+    function runTrf(save = true) {
+        const t = document.getElementById('trf-target').value;
+        const ik2_in = getV('trf-ik2'), sn = getV('trf-sn');
+        const u2n = getV('trf-u2n'), uk = getV('trf-uk');
+        let base, live, res, txt;
+        
+        if(t === 'IK2') {
+            base = `${C.red('I_{k2}')} = \\frac{${C.purp('S_N')}}{\\sqrt{3} \\cdot ${C.cyan('U_{2N}')} \\cdot ${C.gree('u_k')}} \\cdot 100`;
+            if(save) {
+                res = (sn / (1.732 * u2n * uk)) * 100;
+                live = `${C.red('I_{k2}')} = \\frac{${C.purp(sn+'\\text{VA}')}}{\\sqrt{3} \\cdot ${C.cyan(u2n+'\\text{V}')} \\cdot ${C.gree(uk)}} \\cdot 100 = ${C.red(res.toFixed(0)+'\\text{A}')}`;
+                document.getElementById('trf-res').innerText = "Ik2 = " + res.toFixed(0) + " A"; txt = `Sn=${sn}VA | uk=${uk}%`;
+            }
+        } else if(t === 'SN') {
+            base = `${C.purp('S_N')} = \\frac{${C.red('I_{k2}')} \\cdot \\sqrt{3} \\cdot ${C.cyan('U_{2N}')} \\cdot ${C.gree('u_k')}}{100}`;
+            if(save) {
+                res = (ik2_in * 1.732 * u2n * uk) / 100;
+                live = `${C.purp('S_N')} = \\frac{${C.red(ik2_in+'\\text{A}')} \\cdot \\sqrt{3} \\cdot ${C.cyan(u2n+'\\text{V}')} \\cdot ${C.gree(uk)}}{100} = ${C.purp(res.toFixed(0)+'\\text{VA}')}`;
+                document.getElementById('trf-res').innerText = "Sn = " + res.toFixed(0) + " VA"; txt = `Ik2=${ik2_in}A | uk=${uk}%`;
+            }
+        } else {
+            base = `${C.gree('u_k')} = \\frac{${C.purp('S_N')} \\cdot 100}{\\sqrt{3} \\cdot ${C.cyan('U_{2N}')} \\cdot ${C.red('I_{k2}')}}`;
+            if(save) {
+                res = (sn * 100) / (1.732 * u2n * ik2_in);
+                live = `${C.gree('u_k')} = \\frac{${C.purp(sn+'\\text{VA}')} \\cdot 100}{\\sqrt{3} \\cdot ${C.cyan(u2n+'\\text{V}')} \\cdot ${C.red(ik2_in+'\\text{A}')}} = ${C.gree(res.toFixed(2)+'\\%')}`;
+                document.getElementById('trf-res').innerText = "uk = " + res.toFixed(2) + " %"; txt = `Sn=${sn}VA | Ik2=${ik2_in}A`;
+            }
+        }
+        
+        renderMath('trf-f-base', base); 
+        if(save) { renderMath('trf-f-live', live); queueHistory('trf', 'Transformator', txt, document.getElementById('trf-res').innerText); } 
+        else { document.getElementById('trf-f-live').innerHTML = ''; document.getElementById('trf-res').innerText = '--'; }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => { 
+        loadHistory();
+        
+        tglU(); tglIso(); tglPv(); tglIz();
+        
+        runQ(false); runP(false); runU(false); runIk(false); tglUbl(); runUbl(false); 
+        tglAbs(); runAbs(false); runIso(false); runCos(false); tglCap(); runCap(false); 
+        runMot(false); runSd(false); runPv(false); tglEmob(); runEmob(false); 
+        runBel(false); runThm(false); runTrf(false); tglUsv(); runUsv(false); tglPvdc(); runPvdc(false); 
+        runIz(false);
+
+        // App erst nach init "scharf" schalten
+        setTimeout(() => { isAppInit = false; }, 800); 
+    });
+</script>
+</body>
+</html>

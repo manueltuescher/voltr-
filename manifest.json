@@ -1,0 +1,15 @@
+{
+  "name": "voltr² Professional",
+  "short_name": "voltr²",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#191a21",
+  "theme_color": "#21222c",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
